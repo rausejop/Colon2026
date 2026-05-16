@@ -244,9 +244,65 @@
     #responsive-warning{ display:flex; }
     header, #app-container{ display:none; }
   }
+
+  /* --------- Pantalla de carga: cuadro de Garnelo (1892) --------- */
+  #splash-screen{
+    position:fixed; inset:0; z-index:9999; background:#0a0604;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    transition:opacity 700ms ease-out;
+  }
+  #splash-screen.fading{ opacity:0; pointer-events:none; }
+  #splash-screen img{
+    max-width:96vw; max-height:78vh; object-fit:contain;
+    box-shadow:0 10px 60px rgba(0,0,0,.8), 0 0 0 1px rgba(212,163,90,.4);
+    background:#1a0d04; opacity:0; transition:opacity 900ms ease-in;
+  }
+  #splash-screen img.loaded{ opacity:1; }
+  #splash-title{
+    position:absolute; top:5%; left:0; right:0; text-align:center;
+    font-family:'UnifrakturCook',serif; color:#f6cf85; font-size:3rem;
+    text-shadow:0 0 24px rgba(0,0,0,.9), 0 2px 0 #1a0d04;
+    letter-spacing:.04em;
+  }
+  #splash-caption{
+    position:absolute; bottom:6%; left:0; right:0; text-align:center;
+    font-family:'IM Fell English',serif; color:#d4a35a;
+    font-size:.95rem; line-height:1.5; padding:0 1rem;
+  }
+  #splash-caption b{ color:#f6cf85; }
+  #splash-caption .src{ color:#8a6532; font-size:.78rem; font-style:italic; margin-top:.35rem; display:block; }
+  #splash-spinner{
+    position:absolute; bottom:14%; left:50%; transform:translateX(-50%);
+    width:34px; height:34px; border:3px solid rgba(212,163,90,.25);
+    border-top-color:#f6cf85; border-radius:50%;
+    animation:splashSpin 1.1s linear infinite;
+  }
+  #splash-screen img.loaded ~ #splash-spinner{ display:none; }
+  @keyframes splashSpin{ to { transform:translate(-50%,0) rotate(360deg); } }
+
+  /* Botón play "pulsando" cuando la simulación está en pausa inicial */
+  @keyframes startPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(246,207,133,.6); }
+    50%    { box-shadow:0 0 0 10px rgba(246,207,133,0); }
+  }
+  #btn-play.invite-start{ animation:startPulse 1.6s ease-out infinite; }
 </style>
 </head>
 <body class="h-screen w-screen overflow-hidden">
+
+<!-- ============================ SPLASH ============================ -->
+<div id="splash-screen" aria-hidden="false">
+  <div id="splash-title">Colón 1492</div>
+  <img id="splash-img"
+       src="https://upload.wikimedia.org/wikipedia/commons/c/ca/Primer_homenaje_a_Col%C3%B3n_%28Garnelo%29.jpg"
+       alt="Primer homenaje a Colón — José Garnelo y Alda, 1892">
+  <div id="splash-spinner"></div>
+  <div id="splash-caption">
+    <b>Primer homenaje a Colón</b> · José Garnelo y Alda, 1892 · Museo Naval de Madrid<br>
+    Pulsa <b>▶</b> para zarpar del puerto de Palos cuando estés listo.
+    <span class="src">Imagen: Wikimedia Commons (dominio público)</span>
+  </div>
+</div>
 
 <!-- Aviso de pantalla pequeña: el simulador necesita ≥900 px de ancho -->
 <div id="responsive-warning">
@@ -263,7 +319,7 @@
 ====================================================================== -->
 <header class="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2 hud-panel" style="height:54px;">
   <div class="flex items-center gap-3">
-    <div class="font-uncial text-2xl hud-glow" style="color:#f6cf85;">⚓ Colón 1492</div>
+    <div class="font-uncial text-2xl hud-glow" style="color:#f6cf85;">Colón 1492</div>
     <div class="text-xs opacity-80 font-display tracking-widest">SIMULADOR HISTÓRICO · DESCUBRIMIENTO</div>
   </div>
   <div class="flex items-center gap-4 text-sm">
@@ -573,7 +629,8 @@
           <option value="low">Baja (geometría plana)</option>
           <option value="medium">Media (texturas básicas)</option>
           <option value="high">Alta (texturas + jarcia)</option>
-          <option value="ultra" selected>Ultra (texturas, jarcia y normales)</option>
+          <option value="ultra">Ultra (texturas, jarcia y normales)</option>
+          <option value="epico" selected>Épico (×3: PBR completo, barandillas, jarcia densa)</option>
         </select>
       </label>
     </div>
@@ -634,6 +691,7 @@
     <div class="flex items-center gap-2 text-sm mb-3">
       <button class="btn info-tab active" data-tab="crew">Tripulación</button>
       <button class="btn info-tab" data-tab="ships">Naves</button>
+      <button class="btn info-tab" data-tab="anatomy">Anatomía de la nave</button>
       <button class="btn info-tab" data-tab="voyage">La expedición</button>
       <button class="btn info-tab" data-tab="sources">Fuentes</button>
     </div>
@@ -666,6 +724,7 @@
     </div>
 
     <div id="info-tab-ships" class="info-tab-content" style="display:none;"></div>
+    <div id="info-tab-anatomy" class="info-tab-content" style="display:none;"></div>
     <div id="info-tab-voyage" class="info-tab-content" style="display:none;"></div>
     <div id="info-tab-sources" class="info-tab-content" style="display:none;"></div>
   </div>
@@ -2002,7 +2061,28 @@ function beaufortScale(kn){
 }
 
 /* ============================================================================
-   2.7  Ilustraciones de naves en SVG (reconstrucción Martínez-Hidalgo 1966)
+   2.7b  Terreno 3D — costa real desde la API open-elevation.com
+   ----------------------------------------------------------------------------
+   Cuando la nave se acerca a tierra, generamos las colinas reales consultando
+   la API gratuita open-elevation.com (datos SRTM/GTOPO30), que devuelve hasta
+   un millar de puntos por POST y responde con cabeceras CORS abiertas — apto
+   para una página servida desde file://. La alternativa AWS Terrain Tiles
+   (PNG Terrarium) está discontinuada de cabeceras CORS y tainetea el canvas.
+   - Sitio:   https://open-elevation.com/
+   - API:     POST https://api.open-elevation.com/api/v1/lookup
+              body: { "locations": [{"latitude": ..., "longitude": ...}, ...] }
+============================================================================ */
+const OPEN_ELEVATION_URL  = "https://api.open-elevation.com/api/v1/lookup";
+const TERRAIN_RADIUS_M    = 6000;         // radio horizontal (m) alrededor de la nave
+const TERRAIN_SEG         = 48;           // 49×49 = 2 401 puntos por consulta (~0.35 s round-trip)
+const TERRAIN_REBUILD_M   = 1500;         // metros antes de reconstruir
+const TERRAIN_CHECK_S     = 4;            // intervalo entre comprobaciones (s reales)
+const TERRAIN_CACHE_RES_M = 100;          // resolución de caché (~100 m): redondear lat/lon a 3 decimales
+const EARTH_CIRC_M        = 40075016.686;
+const M_PER_LAT_DEG       = EARTH_CIRC_M / 360;
+
+/* ============================================================================
+   2.7c  Ilustraciones de naves en SVG (reconstrucción Martínez-Hidalgo 1966)
         Vista de banda de estribor. Reproducción didáctica basada en los planos
         del Museo Naval de Madrid y del Museo Marítimo de Barcelona.
 ============================================================================ */
@@ -2495,38 +2575,41 @@ function getTex(key, builder){
   return __TEX_CACHE[key];
 }
 
-function makeWoodTexture(){
+function makeWoodTexture(size=1024){
+  const S = size;
+  const plank = S/8;     // separación entre tablones (8 tablones por textura)
   const c = document.createElement('canvas');
-  c.width = 1024; c.height = 1024;
+  c.width = S; c.height = S;
   const ctx = c.getContext('2d');
-  const g = ctx.createLinearGradient(0,0,0,1024);
+  const g = ctx.createLinearGradient(0,0,0,S);
   g.addColorStop(0,'#3a2510');
   g.addColorStop(0.5,'#5a3a18');
   g.addColorStop(1,'#3a2510');
-  ctx.fillStyle = g; ctx.fillRect(0,0,1024,1024);
-  // vetas
-  for (let i=0;i<900;i++){
+  ctx.fillStyle = g; ctx.fillRect(0,0,S,S);
+  // vetas — densidad proporcional al área (a doble lado, ~4× iteraciones)
+  const veinCount = Math.floor(900 * (S*S) / (1024*1024));
+  for (let i=0;i<veinCount;i++){
     ctx.strokeStyle = `rgba(${10+Math.random()*40},${5+Math.random()*25},0,${0.05+Math.random()*0.35})`;
-    ctx.lineWidth = 0.4 + Math.random()*1.4;
-    const y = Math.random()*1024;
+    ctx.lineWidth = (0.4 + Math.random()*1.4) * (S/1024);
+    const y = Math.random()*S;
     ctx.beginPath();
     ctx.moveTo(0,y);
-    ctx.bezierCurveTo(340,y+(Math.random()-.5)*14, 680,y+(Math.random()-.5)*18, 1024,y+(Math.random()-.5)*10);
+    ctx.bezierCurveTo(S*0.33,y+(Math.random()-.5)*14*(S/1024), S*0.66,y+(Math.random()-.5)*18*(S/1024), S,y+(Math.random()-.5)*10*(S/1024));
     ctx.stroke();
   }
-  // junturas entre tablones (cada 128px) — estopa oscura + reflejo
-  for (let y=128; y<1024; y+=128){
+  // junturas entre tablones — estopa oscura + reflejo de luz
+  for (let y=plank; y<S; y+=plank){
     ctx.strokeStyle = 'rgba(8,4,0,0.92)';
-    ctx.lineWidth = 3.5;
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(1024,y); ctx.stroke();
+    ctx.lineWidth = 3.5 * (S/1024);
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(S,y); ctx.stroke();
     ctx.strokeStyle = 'rgba(140,105,55,0.22)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0,y-2.5); ctx.lineTo(1024,y-2.5); ctx.stroke();
+    ctx.lineWidth = 1 * (S/1024);
+    ctx.beginPath(); ctx.moveTo(0,y-2.5*(S/1024)); ctx.lineTo(S,y-2.5*(S/1024)); ctx.stroke();
   }
   // clavijas de hierro entre tablones
-  for (let x=64; x<1024; x+=128){
-    for (let y=64; y<1024; y+=128){
-      const r = 2.5 + Math.random()*1.5;
+  for (let x=plank/2; x<S; x+=plank){
+    for (let y=plank/2; y<S; y+=plank){
+      const r = (2.5 + Math.random()*1.5) * (S/1024);
       const cg = ctx.createRadialGradient(x,y,0,x,y,r);
       cg.addColorStop(0,'rgba(15,8,2,0.96)');
       cg.addColorStop(0.6,'rgba(40,28,14,0.65)');
@@ -2536,9 +2619,10 @@ function makeWoodTexture(){
     }
   }
   // nudos de madera
-  for (let i=0;i<28;i++){
-    const x = Math.random()*1024, y = Math.random()*1024;
-    const r = 8 + Math.random()*18;
+  const knotCount = Math.floor(28 * (S*S) / (1024*1024));
+  for (let i=0;i<knotCount;i++){
+    const x = Math.random()*S, y = Math.random()*S;
+    const r = (8 + Math.random()*18) * (S/1024);
     const cg = ctx.createRadialGradient(x,y,0,x,y,r);
     cg.addColorStop(0,'rgba(18,10,2,0.96)');
     cg.addColorStop(0.5,'rgba(80,55,28,0.42)');
@@ -2547,85 +2631,155 @@ function makeWoodTexture(){
     ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
     for (let k=0;k<3;k++){
       ctx.strokeStyle = `rgba(20,10,2,${0.32-k*0.09})`;
-      ctx.lineWidth = 0.8;
+      ctx.lineWidth = 0.8 * (S/1024);
       ctx.beginPath(); ctx.arc(x,y, r*(0.35+k*0.22), 0, Math.PI*2); ctx.stroke();
     }
   }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.anisotropy = 16;
+  t.anisotropy = 32;
+  if (THREE.sRGBEncoding !== undefined) t.encoding = THREE.sRGBEncoding;
   return t;
 }
 
-function makeWoodNormal(){
+function makeWoodNormal(size=1024){
+  const S = size;
+  const plank = S/8;
   const c = document.createElement('canvas');
-  c.width = 1024; c.height = 1024;
+  c.width = S; c.height = S;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#8080ff'; ctx.fillRect(0,0,1024,1024);
+  ctx.fillStyle = '#8080ff'; ctx.fillRect(0,0,S,S);
   // Junturas en relieve
-  for (let y=128; y<1024; y+=128){
-    ctx.fillStyle = '#6088ff'; ctx.fillRect(0,y-3,1024,2);
-    ctx.fillStyle = '#a078ff'; ctx.fillRect(0,y+1,1024,2);
+  const lineW = Math.max(2, 3*(S/1024));
+  for (let y=plank; y<S; y+=plank){
+    ctx.fillStyle = '#6088ff'; ctx.fillRect(0, y-lineW, S, lineW-1);
+    ctx.fillStyle = '#a078ff'; ctx.fillRect(0, y+1,     S, lineW-1);
   }
   // vetas (sutiles)
-  for (let i=0;i<300;i++){
+  const veinCount = Math.floor(300 * (S*S) / (1024*1024));
+  for (let i=0;i<veinCount;i++){
     ctx.strokeStyle = `rgba(${100+Math.random()*40},${100+Math.random()*40},255,${0.10+Math.random()*0.20})`;
-    ctx.lineWidth = 0.5+Math.random()*1.2;
-    const y = Math.random()*1024;
+    ctx.lineWidth = (0.5+Math.random()*1.2) * (S/1024);
+    const y = Math.random()*S;
     ctx.beginPath(); ctx.moveTo(0,y);
-    ctx.bezierCurveTo(340,y+(Math.random()-.5)*10, 680,y+(Math.random()-.5)*12, 1024,y+(Math.random()-.5)*8);
+    ctx.bezierCurveTo(S*0.33,y+(Math.random()-.5)*10*(S/1024), S*0.66,y+(Math.random()-.5)*12*(S/1024), S,y+(Math.random()-.5)*8*(S/1024));
     ctx.stroke();
   }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.anisotropy = 16;
+  t.anisotropy = 32;
   return t;
 }
 
-function makeSailTexture(){
+function makeSailTexture(size=512){
+  const S = size;
+  const seam = S/8;       // 8 paneles de lona cosidos
+  const k = S/512;        // factor de escala
   const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
+  c.width = S; c.height = S;
   const ctx = c.getContext('2d');
-  const g = ctx.createLinearGradient(0,0,512,512);
+  const g = ctx.createLinearGradient(0,0,S,S);
   g.addColorStop(0,'#f5e7c9');
   g.addColorStop(0.5,'#eed7a3');
   g.addColorStop(1,'#f5e7c9');
-  ctx.fillStyle = g; ctx.fillRect(0,0,512,512);
-  // trama de lona
-  for (let x=0;x<512;x+=3){
+  ctx.fillStyle = g; ctx.fillRect(0,0,S,S);
+  // trama de lona — paso 3px en 512 → S/170 en general
+  const step = Math.max(2, Math.round(3*k));
+  for (let x=0;x<S;x+=step){
     ctx.strokeStyle = `rgba(150,120,75,${0.07+Math.random()*0.05})`;
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,512); ctx.stroke();
+    ctx.lineWidth = k;
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,S); ctx.stroke();
   }
-  for (let y=0;y<512;y+=3){
+  for (let y=0;y<S;y+=step){
     ctx.strokeStyle = `rgba(150,120,75,${0.05+Math.random()*0.04})`;
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(512,y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(S,y); ctx.stroke();
   }
   // arrugas
-  for (let i=0;i<10;i++){
-    const x = Math.random()*512;
+  const wrinkCount = Math.floor(10 * k);
+  for (let i=0;i<wrinkCount;i++){
+    const x = Math.random()*S;
     ctx.strokeStyle = `rgba(120,90,50,${0.07+Math.random()*0.10})`;
-    ctx.lineWidth = 2 + Math.random()*4;
+    ctx.lineWidth = (2 + Math.random()*4) * k;
     ctx.beginPath();
     ctx.moveTo(x,0);
-    ctx.bezierCurveTo(x+(Math.random()-.5)*30,170, x+(Math.random()-.5)*40,340, x+(Math.random()-.5)*20,512);
+    ctx.bezierCurveTo(x+(Math.random()-.5)*30*k,S*0.33, x+(Math.random()-.5)*40*k,S*0.66, x+(Math.random()-.5)*20*k,S);
     ctx.stroke();
   }
-  // refuerzos
+  // refuerzos perimetrales
   ctx.strokeStyle = 'rgba(110,80,40,0.55)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(6,6,500,500);
+  ctx.lineWidth = 2*k;
+  ctx.strokeRect(6*k, 6*k, S-12*k, S-12*k);
   ctx.strokeStyle = 'rgba(110,80,40,0.42)';
-  ctx.setLineDash([4,4]); ctx.lineWidth = 1;
-  for (let y=64;y<512;y+=64){
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(512,y); ctx.stroke();
+  ctx.setLineDash([4*k,4*k]); ctx.lineWidth = k;
+  for (let y=seam; y<S; y+=seam){
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(S,y); ctx.stroke();
   }
   ctx.setLineDash([]);
-  // costuras en cuadrícula (paneles de lona cosida)
+  // costuras paneles
   ctx.strokeStyle = 'rgba(95,65,30,0.30)';
-  ctx.lineWidth = 0.8;
-  for (let x=64; x<512; x+=64){
-    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,512); ctx.stroke();
+  ctx.lineWidth = 0.8*k;
+  for (let x=seam; x<S; x+=seam){
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,S); ctx.stroke();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 32;
+  if (THREE.sRGBEncoding !== undefined) t.encoding = THREE.sRGBEncoding;
+  return t;
+}
+
+function makeSailNormal(size=512){
+  const S = size;
+  const seam = S/8;
+  const k = S/512;
+  const c = document.createElement('canvas');
+  c.width = S; c.height = S;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#8080ff'; ctx.fillRect(0,0,S,S);
+  // costuras horizontales
+  for (let y=seam; y<S; y+=seam){
+    ctx.fillStyle = '#6088ff'; ctx.fillRect(0, y-k, S, k);
+    ctx.fillStyle = '#a078ff'; ctx.fillRect(0, y,    S, k);
+  }
+  // arrugas
+  const wrinkCount = Math.floor(6 * k);
+  for (let i=0;i<wrinkCount;i++){
+    const x = Math.random()*S;
+    ctx.strokeStyle = `rgba(${120+Math.random()*30},${120+Math.random()*30},255,0.35)`;
+    ctx.lineWidth = (3 + Math.random()*3) * k;
+    ctx.beginPath();
+    ctx.moveTo(x,0);
+    ctx.bezierCurveTo(x+15*k,S*0.33, x-10*k,S*0.66, x+5*k,S);
+    ctx.stroke();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 32;
+  return t;
+}
+
+/* Roughness procedural: variación pseudoaleatoria para PBR realista */
+function makeWoodRoughness(size=1024){
+  const S = size;
+  const c = document.createElement('canvas');
+  c.width = S; c.height = S;
+  const ctx = c.getContext('2d');
+  // Base rugosidad alta (madera vieja sin barniz)
+  ctx.fillStyle = '#d8d8d8'; ctx.fillRect(0,0,S,S);
+  // Junturas y nudos algo más rugosos
+  for (let y=S/8; y<S; y+=S/8){
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(0, y-2*(S/1024), S, 4*(S/1024));
+  }
+  // Manchas brillantes (zonas más lisas por desgaste y aceite del manejo)
+  for (let i=0;i<40;i++){
+    const x = Math.random()*S, y = Math.random()*S;
+    const r = (20 + Math.random()*60)*(S/1024);
+    const cg = ctx.createRadialGradient(x,y,0,x,y,r);
+    cg.addColorStop(0,'rgba(110,110,110,0.55)');
+    cg.addColorStop(1,'rgba(110,110,110,0)');
+    ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
   }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -2633,25 +2787,28 @@ function makeSailTexture(){
   return t;
 }
 
-function makeSailNormal(){
+function makeSailRoughness(size=512){
+  const S = size;
   const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
+  c.width = S; c.height = S;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#8080ff'; ctx.fillRect(0,0,512,512);
-  // costuras horizontales
-  for (let y=64;y<512;y+=64){
-    ctx.fillStyle = '#6088ff'; ctx.fillRect(0,y-1,512,1);
-    ctx.fillStyle = '#a078ff'; ctx.fillRect(0,y,512,1);
-  }
-  // arrugas
-  for (let i=0;i<6;i++){
-    const x = Math.random()*512;
-    ctx.strokeStyle = `rgba(${120+Math.random()*30},${120+Math.random()*30},255,0.35)`;
-    ctx.lineWidth = 3 + Math.random()*3;
-    ctx.beginPath();
-    ctx.moveTo(x,0);
-    ctx.bezierCurveTo(x+15,170, x-10,340, x+5,512);
-    ctx.stroke();
+  // Lona muy mate base
+  ctx.fillStyle = '#ededed'; ctx.fillRect(0,0,S,S);
+  // Refuerzos perimetrales más mates aún (más rugosos)
+  ctx.fillStyle = '#fafafa';
+  ctx.fillRect(0, 0, S, 8*(S/512));
+  ctx.fillRect(0, S-8*(S/512), S, 8*(S/512));
+  ctx.fillRect(0, 0, 8*(S/512), S);
+  ctx.fillRect(S-8*(S/512), 0, 8*(S/512), S);
+  // Áreas de tela mojada o tensa (algo más lisas)
+  for (let i=0;i<20;i++){
+    const x = Math.random()*S, y = Math.random()*S;
+    const r = (15 + Math.random()*40)*(S/512);
+    const cg = ctx.createRadialGradient(x,y,0,x,y,r);
+    cg.addColorStop(0,'rgba(180,180,180,0.5)');
+    cg.addColorStop(1,'rgba(180,180,180,0)');
+    ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
   }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -2705,41 +2862,46 @@ function makeBowFoamTexture(){
   return t;
 }
 
-function makeDeckTexture(){
-  // Tablas dispuestas longitudinalmente
+function makeDeckTexture(size=1024){
+  // Tablas longitudinales — aspect 2:1 (W = 2× H)
+  const W = size, H = size/2;
+  const k = W/1024;
+  const plank = H/8;        // 8 tablas a lo ancho
   const c = document.createElement('canvas');
-  c.width = 1024; c.height = 512;
+  c.width = W; c.height = H;
   const ctx = c.getContext('2d');
-  const g = ctx.createLinearGradient(0,0,1024,0);
+  const g = ctx.createLinearGradient(0,0,W,0);
   g.addColorStop(0,'#7a4f24');
   g.addColorStop(0.5,'#8e5e30');
   g.addColorStop(1,'#7a4f24');
-  ctx.fillStyle = g; ctx.fillRect(0,0,1024,512);
-  // vetas de las tablas
-  for (let i=0;i<500;i++){
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  // vetas
+  const veinCount = Math.floor(500 * k);
+  for (let i=0;i<veinCount;i++){
     ctx.strokeStyle = `rgba(${30+Math.random()*40},${15+Math.random()*30},5,${0.06+Math.random()*0.25})`;
-    ctx.lineWidth = 0.4 + Math.random()*1.0;
-    const y = Math.random()*512;
+    ctx.lineWidth = (0.4 + Math.random()*1.0) * k;
+    const y = Math.random()*H;
     ctx.beginPath(); ctx.moveTo(0,y);
-    ctx.bezierCurveTo(340,y+(Math.random()-.5)*6, 680,y+(Math.random()-.5)*8, 1024,y+(Math.random()-.5)*4);
+    ctx.bezierCurveTo(W*0.33,y+(Math.random()-.5)*6*k, W*0.66,y+(Math.random()-.5)*8*k, W,y+(Math.random()-.5)*4*k);
     ctx.stroke();
   }
-  // junturas (tablas longitudinales cada 64px)
-  for (let y=64; y<512; y+=64){
+  // junturas (tablas cada plank)
+  for (let y=plank; y<H; y+=plank){
     ctx.strokeStyle = 'rgba(10,5,0,0.85)';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(1024,y); ctx.stroke();
+    ctx.lineWidth = 2.5*k;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
   }
   // clavijas
-  for (let x=80; x<1024; x+=160){
-    for (let y=32; y<512; y+=64){
+  for (let x=80*k; x<W; x+=160*k){
+    for (let y=plank/2; y<H; y+=plank){
       ctx.fillStyle = 'rgba(15,8,2,0.9)';
-      ctx.beginPath(); ctx.arc(x,y,2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x,y,2*k,0,Math.PI*2); ctx.fill();
     }
   }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.anisotropy = 16;
+  t.anisotropy = 32;
+  if (THREE.sRGBEncoding !== undefined) t.encoding = THREE.sRGBEncoding;
   return t;
 }
 
@@ -2753,13 +2915,14 @@ function buildShip(shipKey, quality="ultra"){
   group.userData.sails = {};
   group.userData.quality = quality;
 
-  // Tabla de detalle por calidad
+  // Tabla de detalle por calidad. "épico" multiplica geometría y añade barandillas + roughness PBR.
   const Q = ({
-    low:    { hullBevel:1, hullSteps:1, mastSeg:8,  sailSeg:6,  ropes:false, textures:false, normals:false, anchor:false },
-    medium: { hullBevel:2, hullSteps:2, mastSeg:12, sailSeg:10, ropes:false, textures:true,  normals:false, anchor:false },
-    high:   { hullBevel:3, hullSteps:3, mastSeg:16, sailSeg:14, ropes:true,  textures:true,  normals:false, anchor:true  },
-    ultra:  { hullBevel:4, hullSteps:4, mastSeg:24, sailSeg:24, ropes:true,  textures:true,  normals:true,  anchor:true  }
-  })[quality] || { hullBevel:4, hullSteps:4, mastSeg:24, sailSeg:24, ropes:true, textures:true, normals:true, anchor:true };
+    low:    { hullBevel:1,  hullSteps:1,  curveSeg:16, mastSeg:8,  sailSeg:6,  ropes:false, textures:false, normals:false, roughMap:false, anchor:false, railing:false, denseRig:false, planking:false },
+    medium: { hullBevel:2,  hullSteps:2,  curveSeg:24, mastSeg:12, sailSeg:10, ropes:false, textures:true,  normals:false, roughMap:false, anchor:false, railing:false, denseRig:false, planking:false },
+    high:   { hullBevel:3,  hullSteps:3,  curveSeg:28, mastSeg:16, sailSeg:14, ropes:true,  textures:true,  normals:false, roughMap:false, anchor:true,  railing:false, denseRig:false, planking:false },
+    ultra:  { hullBevel:4,  hullSteps:4,  curveSeg:32, mastSeg:24, sailSeg:24, ropes:true,  textures:true,  normals:true,  roughMap:false, anchor:true,  railing:false, denseRig:false, planking:true  },
+    epico:  { hullBevel:12, hullSteps:12, curveSeg:64, mastSeg:72, sailSeg:72, ropes:true,  textures:true,  normals:true,  roughMap:true,  anchor:true,  railing:true,  denseRig:true,  planking:true  }
+  })[quality] || { hullBevel:12, hullSteps:12, curveSeg:64, mastSeg:72, sailSeg:72, ropes:true, textures:true, normals:true, roughMap:true, anchor:true, railing:true, denseRig:true, planking:true };
 
   const L = cfg.eslora;
   const B = cfg.manga;
@@ -2767,24 +2930,35 @@ function buildShip(shipKey, quality="ultra"){
   const freeboard = D * 1.4;
   const deck = freeboard;
 
-  // Texturas
-  const woodMap = Q.textures ? getTex('wood',  makeWoodTexture) : null;
-  const woodN   = Q.normals  ? getTex('woodN', makeWoodNormal)  : null;
-  const deckMap = Q.textures ? getTex('deck',  makeDeckTexture) : null;
-  const sailMap = Q.textures ? getTex('sail',  makeSailTexture) : null;
-  const sailN   = Q.normals  ? getTex('sailN', makeSailNormal)  : null;
+  // Texturas — tamaño según calidad: épico usa 2K madera/cubierta y 1.5K lona
+  const wSize = Q.roughMap ? 2048 : 1024;
+  const sSize = Q.roughMap ? 1536 : 512;
+  const dSize = Q.roughMap ? 2048 : 1024;
+  const woodMap  = Q.textures ? getTex('wood-'+wSize,  ()=>makeWoodTexture(wSize))   : null;
+  const woodN    = Q.normals  ? getTex('woodN-'+wSize, ()=>makeWoodNormal(wSize))    : null;
+  const woodR    = Q.roughMap ? getTex('woodR-'+wSize, ()=>makeWoodRoughness(wSize)) : null;
+  const deckMap  = Q.textures ? getTex('deck-'+dSize,  ()=>makeDeckTexture(dSize))   : null;
+  const sailMap  = Q.textures ? getTex('sail-'+sSize,  ()=>makeSailTexture(sSize))   : null;
+  const sailN    = Q.normals  ? getTex('sailN-'+sSize, ()=>makeSailNormal(sSize))    : null;
+  const sailR    = Q.roughMap ? getTex('sailR-'+sSize, ()=>makeSailRoughness(sSize)) : null;
 
   function woodMat(repeat=[2,2], color=0x6b4824, rough=0.92){
     if (!Q.textures) return new THREE.MeshStandardMaterial({color, roughness:rough});
     const m = new THREE.MeshStandardMaterial({
       map: woodMap.clone(),
       normalMap: woodN ? woodN.clone() : null,
-      normalScale: woodN ? new THREE.Vector2(0.6,0.6) : undefined,
-      color:0xffffff, roughness:rough, metalness:0.02
+      normalScale: woodN ? new THREE.Vector2(Q.roughMap?0.9:0.6, Q.roughMap?0.9:0.6) : undefined,
+      roughnessMap: woodR ? woodR.clone() : null,
+      color:0xffffff, roughness:rough, metalness:0.02, envMapIntensity:0.6
     });
     m.map.wrapS = m.map.wrapT = THREE.RepeatWrapping;
     m.map.repeat.set(repeat[0], repeat[1]);
     m.map.needsUpdate = true;
+    if (m.roughnessMap){
+      m.roughnessMap.wrapS = m.roughnessMap.wrapT = THREE.RepeatWrapping;
+      m.roughnessMap.repeat.set(repeat[0], repeat[1]);
+      m.roughnessMap.needsUpdate = true;
+    }
     if (m.normalMap){
       m.normalMap.wrapS = m.normalMap.wrapT = THREE.RepeatWrapping;
       m.normalMap.repeat.set(repeat[0], repeat[1]);
@@ -2804,7 +2978,7 @@ function buildShip(shipKey, quality="ultra"){
   hullShape.quadraticCurveTo(-L/2*0.9, -D*0.95, -L/2, 0);
   const hullGeom = new THREE.ExtrudeGeometry(hullShape, {
     depth: B*0.95, bevelEnabled:true, bevelSegments:Q.hullBevel, steps:Q.hullSteps,
-    bevelSize:0.18, bevelThickness:0.18, curveSegments:32
+    bevelSize:0.18, bevelThickness:0.18, curveSegments: Q.curveSeg || 32
   });
   hullGeom.center();
   hullGeom.rotateX(Math.PI/2);
@@ -2812,13 +2986,90 @@ function buildShip(shipKey, quality="ultra"){
   hull.position.y = freeboard*0.1;
   group.add(hull);
 
-  // ---- Banda dorada bajo borda ----
+  // ---- ANATOMÍA: obra viva vs obra muerta (vertex colors sobre el casco) ----
+  // Bajo la línea de flotación (y mundial = 0) → carena oscura (brea negra).
+  // Sobre la línea → tono de madera natural.
+  if (Q.roughMap){
+    const pos    = hullGeom.attributes.position;
+    const colArr = new Float32Array(pos.count * 3);
+    const yOff   = hull.position.y;
+    for (let i = 0; i < pos.count; i++){
+      const yWorld = pos.getY(i) + yOff;
+      if (yWorld < -0.1){            // obra viva — brea oscura
+        colArr[i*3]=0.20; colArr[i*3+1]=0.13; colArr[i*3+2]=0.08;
+      } else if (yWorld < 0.4){      // franja de flotación — tono medio (boot-top)
+        colArr[i*3]=0.42; colArr[i*3+1]=0.20; colArr[i*3+2]=0.10;
+      } else {                       // obra muerta — madera clara
+        colArr[i*3]=1.0;  colArr[i*3+1]=1.0;  colArr[i*3+2]=1.0;
+      }
+    }
+    hullGeom.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
+    hull.material.vertexColors = true;
+  }
+
+  // ---- QUILLA: espinazo bajo el casco a lo largo de la eslora ----
+  const hullBottomY = freeboard*0.1 - (B*0.95)/2;
+  const keelGeom = new THREE.BoxGeometry(L*0.92, 0.28, 0.32);
+  const keel = new THREE.Mesh(keelGeom, woodMat([3,0.3], 0x2a1808, 0.95));
+  keel.position.set(-L*0.02, hullBottomY - 0.05, 0);   // ligero offset hacia popa
+  group.add(keel);
+
+  // Codaste (sternpost) y roda (stempost) — postes vertical en proa y popa
+  if (Q.roughMap){
+    const postMat   = woodMat([0.4,1.2], 0x3a230f, 0.92);
+    const sternpost = new THREE.Mesh(new THREE.BoxGeometry(0.35, B*0.75, 0.35), postMat);
+    sternpost.position.set(-L/2 + 0.10, freeboard*0.1, 0);
+    group.add(sternpost);
+    const stempost = new THREE.Mesh(new THREE.BoxGeometry(0.35, B*0.75, 0.35), postMat);
+    stempost.position.set(L/2 - 0.10, freeboard*0.1, 0);
+    group.add(stempost);
+  }
+
+  // ---- TIMÓN DE CODASTE: pala vertical articulada en popa ----
+  const rudderH    = B*0.55;                                       // altura (vertical)
+  const rudderCh   = L*0.05;                                       // cuerda (largo en X)
+  const rudderMat  = woodMat([1,1], 0x3a200d, 0.88);
+  const rudder     = new THREE.Mesh(new THREE.BoxGeometry(rudderCh, rudderH, 0.18), rudderMat);
+  rudder.position.set(-L/2 - rudderCh*0.5, freeboard*0.1 - B*0.10, 0);
+  group.add(rudder);
+  // Pinzote (perilla/cabeza del timón) — donde se ata la caña
+  const pinzote   = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.14,0.6,16), rudderMat);
+  pinzote.position.set(-L/2 - rudderCh*0.5, freeboard*0.1 + rudderH*0.50, 0);
+  group.add(pinzote);
+  // Caña del timón (tiller) — palanca de madera hacia proa, sobre el alcázar
+  const tillerLen = L*0.28;
+  const tillerMat = woodMat([1.5,0.3], 0x5a3a18, 0.85);
+  const tiller    = new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.10,tillerLen,12), tillerMat);
+  tiller.rotation.z = Math.PI/2;        // tumbado horizontal
+  tiller.position.set(-L/2 + tillerLen*0.5 - rudderCh, freeboard*0.1 + rudderH*0.55, 0);
+  group.add(tiller);
+
+  // ---- BANDA DORADA + CINTAS LONGITUDINALES (strakes) ----
+  // Banda dorada bajo borda — la "cinta principal" decorativa
   const bandGeom = new THREE.TorusGeometry(L*0.42, 0.10, 8, 96);
   bandGeom.scale(1.0, B/(L*0.84), 1.0);
   const band = new THREE.Mesh(bandGeom, new THREE.MeshStandardMaterial({ color:0xd0a050, roughness:0.45, metalness:0.4 }));
   band.rotation.x = Math.PI/2;
   band.position.y = deck*0.95;
   group.add(band);
+  // Dos cintas estructurales de madera oscura a media altura (obra muerta)
+  if (Q.roughMap){
+    [deck*0.55, deck*0.78].forEach(yHeight=>{
+      const sg = new THREE.TorusGeometry(L*0.42, 0.075, 6, 64);
+      sg.scale(1.0, B/(L*0.84), 1.0);
+      const s = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ color:0x3a2410, roughness:0.85, metalness:0.0 }));
+      s.rotation.x = Math.PI/2;
+      s.position.y = yHeight;
+      group.add(s);
+    });
+    // Línea de flotación visible — anillo fino justo en y=0
+    const wlGeom = new THREE.TorusGeometry(L*0.42, 0.045, 4, 64);
+    wlGeom.scale(1.0, B/(L*0.84), 1.0);
+    const waterline = new THREE.Mesh(wlGeom, new THREE.MeshStandardMaterial({ color:0xf5e0a8, roughness:0.6, metalness:0.0 }));
+    waterline.rotation.x = Math.PI/2;
+    waterline.position.y = 0;
+    group.add(waterline);
+  }
 
   // ---- Cubierta texturizada ----
   const deckGeom = new THREE.BoxGeometry(L*0.85, 0.22, B*0.78);
@@ -2840,6 +3091,72 @@ function buildShip(shipKey, quality="ultra"){
   const rcastle = new THREE.Mesh(new THREE.BoxGeometry(L*0.22, D*1.1, B*0.78), woodMat([1.5,1], 0x6f4324));
   rcastle.position.set(-L*0.34, deck + D*0.55, 0);
   group.add(rcastle);
+
+  // ---- BORDA (bulwark) y TRANCANIL (waterway) — pared sólida sobre cubierta ----
+  if (Q.railing){
+    const bordaH = 0.85;                                  // altura de la borda
+    const bordaT = 0.16;                                  // grosor
+    const bordaW = woodMat([2,0.4], 0x4f2e10, 0.88);
+    const xMin = -L*0.32, xMax = L*0.32;
+    const zS   =  B*0.40,  zP   = -B*0.40;
+    // Pared sólida estribor y babor
+    const bordaGeom = new THREE.BoxGeometry(xMax-xMin, bordaH, bordaT);
+    const bordaSt = new THREE.Mesh(bordaGeom, bordaW); bordaSt.position.set((xMax+xMin)/2, deck + bordaH/2 + 0.11, zS); group.add(bordaSt);
+    const bordaPo = new THREE.Mesh(bordaGeom, bordaW); bordaPo.position.set((xMax+xMin)/2, deck + bordaH/2 + 0.11, zP); group.add(bordaPo);
+    // Cap rail (regala) — listón superior de remate
+    const capMat  = woodMat([2,0.3], 0x2e1808, 0.78);
+    const capGeom = new THREE.BoxGeometry(xMax-xMin, 0.10, bordaT*1.4);
+    const capSt = new THREE.Mesh(capGeom, capMat); capSt.position.set((xMax+xMin)/2, deck + bordaH + 0.16, zS); group.add(capSt);
+    const capPo = new THREE.Mesh(capGeom, capMat); capPo.position.set((xMax+xMin)/2, deck + bordaH + 0.16, zP); group.add(capPo);
+    // Trancanil — listón al pie de la borda que canaliza el agua a los imbornales
+    const tranGeom = new THREE.BoxGeometry(xMax-xMin, 0.10, 0.18);
+    const tranSt = new THREE.Mesh(tranGeom, capMat); tranSt.position.set((xMax+xMin)/2, deck + 0.06, zS-0.05); group.add(tranSt);
+    const tranPo = new THREE.Mesh(tranGeom, capMat); tranPo.position.set((xMax+xMin)/2, deck + 0.06, zP+0.05); group.add(tranPo);
+    // Imbornales (4 a cada banda)
+    const imbMat = new THREE.MeshStandardMaterial({color:0x0a0604, roughness:0.6});
+    const imbornal = new THREE.BoxGeometry(0.20, 0.10, bordaT*1.5);
+    for (let k=0;k<4;k++){
+      const xi = xMin + (xMax-xMin)*(k+1)/5;
+      const i1 = new THREE.Mesh(imbornal, imbMat); i1.position.set(xi, deck + 0.12, zS); group.add(i1);
+      const i2 = new THREE.Mesh(imbornal, imbMat); i2.position.set(xi, deck + 0.12, zP); group.add(i2);
+    }
+  }
+
+  // ---- ESCOTILLAS con rejillas en la cubierta principal ----
+  if (Q.roughMap){
+    function makeHatch(xCenter, w, l){
+      const hatch = new THREE.Group();
+      // Marco
+      const frameMat = woodMat([1,1], 0x3a2410, 0.85);
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(w*1.10, 0.14, l*1.10), frameMat);
+      frame.position.y = deck + 0.10;
+      hatch.add(frame);
+      // Hueco oscuro (interior bodega)
+      const hole = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, l),
+        new THREE.MeshStandardMaterial({color:0x06030a, roughness:0.9}));
+      hole.position.y = deck + 0.06;
+      hatch.add(hole);
+      // Listones longitudinales de la rejilla
+      const slatMat = woodMat([0.3,0.3], 0x5a3a18, 0.85);
+      const nL = 6, nT = 4;
+      for (let i=0; i<nL; i++){
+        const z0 = -l/2 + (l/(nL-1))*i;
+        const s = new THREE.Mesh(new THREE.BoxGeometry(w*0.96, 0.06, l/(nL*4)), slatMat);
+        s.position.set(0, deck + 0.18, z0);
+        hatch.add(s);
+      }
+      for (let j=0; j<nT; j++){
+        const x0 = -w/2 + (w/(nT-1))*j;
+        const s = new THREE.Mesh(new THREE.BoxGeometry(w/(nT*4), 0.06, l*0.96), slatMat);
+        s.position.set(x0, deck + 0.22, 0);
+        hatch.add(s);
+      }
+      hatch.position.x = xCenter;
+      return hatch;
+    }
+    group.add(makeHatch(L*0.06,  B*0.20, B*0.18));   // escotilla central
+    group.add(makeHatch(-L*0.18, B*0.22, B*0.20));   // escotilla popa de la cubierta principal
+  }
 
   // Detalle ultra: portilla y ventanas
   if (Q.anchor){
@@ -2906,7 +3223,7 @@ function buildShip(shipKey, quality="ultra"){
       group.add(new THREE.Line(g, ropeMat));
     }
     // Obenques desde el tope hacia la borda (estribor + babor)
-    const ropesPerMast = [
+    let ropesPerMast = [
       { x:0,       topY: deck + L*0.85, foots: [
           [ -B*0.35], [B*0.35], [ -B*0.4, -L*0.18], [B*0.4, -L*0.18]
       ]},
@@ -2917,6 +3234,21 @@ function buildShip(shipKey, quality="ultra"){
           [ -B*0.30], [B*0.30], [ -B*0.32, -L*0.20], [B*0.32, -L*0.20]
       ]}
     ];
+    // En épico, duplicamos cantidad de obenques con offsets intermedios
+    if (Q.denseRig){
+      ropesPerMast = ropesPerMast.map(mp => ({
+        x: mp.x,
+        topY: mp.topY,
+        foots: mp.foots.flatMap(f => {
+          const [fz, fx=0] = f;
+          return [
+            [fz, fx],
+            [fz*0.65, fx*0.65 + (fx===0 ? 0 : fx*0.05)],
+            [fz*1.05, fx*1.05]
+          ];
+        })
+      }));
+    }
     ropesPerMast.forEach(mp=>{
       mp.foots.forEach(f=>{
         const fz = f[0], fx = (f[1] || 0);
@@ -2931,7 +3263,7 @@ function buildShip(shipKey, quality="ultra"){
 
     // Flechastes (escalas de obenques): líneas horizontales entre obenques
     function flechastes(x, topY){
-      const N = quality==="ultra" ? 7 : 4;
+      const N = Q.denseRig ? 14 : (quality==="ultra" ? 7 : 4);
       for (let i=1;i<=N;i++){
         const t = i/(N+1);
         const y = deck + 0.1 + (topY - deck - 0.1)*(1-t);
@@ -2962,7 +3294,12 @@ function buildShip(shipKey, quality="ultra"){
       const sn = sailN.clone();
       sn.wrapS = sn.wrapT = THREE.RepeatWrapping; sn.repeat.set(2,2); sn.needsUpdate=true;
       mat.normalMap = sn;
-      mat.normalScale = new THREE.Vector2(0.5, 0.5);
+      mat.normalScale = new THREE.Vector2(Q.roughMap?0.7:0.5, Q.roughMap?0.7:0.5);
+    }
+    if (Q.roughMap && sailR){
+      const sr = sailR.clone();
+      sr.wrapS = sr.wrapT = THREE.RepeatWrapping; sr.repeat.set(2,2); sr.needsUpdate=true;
+      mat.roughnessMap = sr;
     }
     return mat;
   }
@@ -3099,7 +3436,7 @@ class SimulationEngine {
     this.simDate = new Date(Date.UTC(1492,7,3,8,0,0)); // 3 ago 1492 08:00 (juliano)
     this.simSpeed = 1;              // tiempo real 1:1 por defecto
     this.speedSteps = [1, 60, 3600, 86400, 604800, 5184000, 31536000];
-    this.running = true;
+    this.running = false;           // arranca en pausa en el puerto de Palos hasta que se pulse ▶
 
     this.position = { lat:37.226, lon:-6.890 }; // Palos
     this.estima   = { lat:37.226, lon:-6.890 }; // estima de Colón
@@ -3153,7 +3490,7 @@ class SimulationEngine {
     this.config = {
       fleet:true, windArrow:true, fog:true,
       oceanQuality:"ultra",
-      shipQuality:"ultra",
+      shipQuality:"epico",
       isogonic:true, windbelts:true, toponyms:true,
       historicalNamesOnly:true,
       diaryMode:"both", toast:true, sound:true,
@@ -3165,6 +3502,7 @@ class SimulationEngine {
     this.init3D();
     this.initUI();
     this.initShipModels();
+    this.initTerrain();
     this.setShip(this.shipKey, true);
     this.setCrew(this.crewId);
 
@@ -3379,12 +3717,16 @@ class SimulationEngine {
   init3D(){
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0c1828);
-    this.scene.fog = new THREE.FogExp2(0x0c1828, 0.003);
+    this.scene.fog = new THREE.FogExp2(0x0c1828, 0.0001);
 
     const canvas = document.getElementById('three-canvas');
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:"high-performance" });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    // Sombras direccionales del sol
+    // PBR: salida sRGB y mapeo tonal ACES Filmic para look cinematográfico
+    if (THREE.sRGBEncoding !== undefined) this.renderer.outputEncoding = THREE.sRGBEncoding;
+    if (THREE.ACESFilmicToneMapping !== undefined) this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.05;
+    // Sombras direccionales del sol — PCF soft a alta resolución
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -3392,20 +3734,22 @@ class SimulationEngine {
     const w = cont.clientWidth, h = cont.clientHeight;
     this.renderer.setSize(w, h, false);
 
-    this.camera = new THREE.PerspectiveCamera(60, w/h, 0.1, 8000);
+    this.camera = new THREE.PerspectiveCamera(60, w/h, 0.5, 30000);
     this.camera.position.set(35, 28, 45);
 
     this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.maxPolarAngle = Math.PI*0.49;
+    this.controls.minDistance = 10;      // evita meter la cámara dentro del casco
+    this.controls.maxDistance = 12000;   // permite alejarse para ver la costa al fondo
     this.controls.target.set(0, 5, 0);
 
     // ----- Luces -----
     const sun = new THREE.DirectionalLight(0xfff1c8, 1.2);
     sun.position.set(120, 100, 60);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.mapSize.set(4096, 4096);
     sun.shadow.camera.left = -120;
     sun.shadow.camera.right = 120;
     sun.shadow.camera.top = 120;
@@ -3421,7 +3765,7 @@ class SimulationEngine {
     this.scene.add(new THREE.HemisphereLight(0xb8dcff, 0x081020, 0.55));
 
     // ----- Cielo / fondo simple gradient -----
-    const skyGeom = new THREE.SphereGeometry(2500, 24, 16);
+    const skyGeom = new THREE.SphereGeometry(25000, 24, 16);
     const skyMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       uniforms: { uTop:{value:new THREE.Color(0x0a2040)}, uBot:{value:new THREE.Color(0x6b8aa8)} },
@@ -3432,7 +3776,7 @@ class SimulationEngine {
     this.scene.add(this.skydome);
 
     // ----- Océano Gerstner (ultra por defecto: 256×256 = 65 k vértices) -----
-    const oceanGeom = new THREE.PlaneGeometry(800, 800, 256, 256);
+    const oceanGeom = new THREE.PlaneGeometry(14000, 14000, 256, 256);
     oceanGeom.rotateX(-Math.PI/2);
     this.oceanUniforms = {
       uTime:{value:0},
@@ -3485,6 +3829,252 @@ class SimulationEngine {
       this.scene.add(g);
       this.shipModels[k] = g;
     });
+  }
+
+  /* --------- Aviso flotante reutilizable (usa el #event-toast existente) --------- */
+  _toastInfo(message, ms=5000){
+    const t = document.getElementById('event-toast');
+    if (!t) return;
+    t.innerHTML = `<div class="text-sm" style="color:#f6cf85;">${message}</div>`;
+    t.classList.add('show');
+    clearTimeout(this._toastInfoTimer);
+    this._toastInfoTimer = setTimeout(()=>t.classList.remove('show'), ms);
+  }
+
+  /* --------- Terreno 3D: costa real desde open-elevation.com --------- */
+  initTerrain(){
+    this._terrainMesh      = null;
+    this._terrainCenter    = null;   // {lat, lon, hasLand}
+    this._terrainBusy      = false;
+    this._terrainLastCheck = -Infinity;
+    this._terrainCache     = new Map();   // "lat,lon" → elev metros (rejilla ~100 m)
+    this._terrainBuildSerial = 0;          // discrimina builds obsoletos
+    this._terrainErrorToastShown = false;  // toast de fallo de API una sola vez
+  }
+
+  _cacheKey(lat, lon){
+    // Redondear a la resolución de caché (~100 m): TERRAIN_CACHE_RES_M sobre M_PER_LAT_DEG
+    const stepLat = TERRAIN_CACHE_RES_M / M_PER_LAT_DEG;
+    const stepLon = TERRAIN_CACHE_RES_M / (M_PER_LAT_DEG * Math.cos(lat*Math.PI/180));
+    const rl = Math.round(lat / stepLat) * stepLat;
+    const ro = Math.round(lon / stepLon) * stepLon;
+    return `${rl.toFixed(4)},${ro.toFixed(4)}`;
+  }
+
+  async _fetchElevationBatch(locations){
+    // POST a open-elevation. Devuelve [elev_m, ...] o null si falla.
+    if (!locations.length) return [];
+    try{
+      const resp = await fetch(OPEN_ELEVATION_URL, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ locations })
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const json = await resp.json();
+      if (!json.results || json.results.length !== locations.length){
+        throw new Error("respuesta incompleta");
+      }
+      return json.results.map(r => (typeof r.elevation === 'number') ? r.elevation : 0);
+    } catch(err){
+      console.warn("Terreno: open-elevation API ha fallado —", err.message);
+      if (!this._terrainErrorToastShown){
+        this._terrainErrorToastShown = true;
+        this._toastInfo(`Costa 3D no disponible (${err.message}). La simulación sigue sin el relieve.`);
+      }
+      return null;
+    }
+  }
+
+  async _buildTerrain(centerLat, centerLon){
+    if (this._terrainBusy) return;
+    this._terrainBusy = true;
+    const mySerial = ++this._terrainBuildSerial;
+
+    const radius     = TERRAIN_RADIUS_M;
+    const mPerLat    = M_PER_LAT_DEG;
+    const mPerLon    = mPerLat * Math.cos(centerLat * Math.PI/180);
+    const seg        = TERRAIN_SEG;
+
+    // 1. Recoger puntos (lat, lon) de la rejilla, separando cache-hits y misses
+    const N = (seg+1)*(seg+1);
+    const elev = new Float32Array(N);
+    const keys = new Array(N);
+    const missLocs = [];
+    const missIdx  = [];
+    for (let j = 0; j <= seg; j++){
+      for (let i = 0; i <= seg; i++){
+        const idx = j*(seg+1) + i;
+        const localX = (i/seg - 0.5) * 2*radius;
+        const localZ = (j/seg - 0.5) * 2*radius;
+        const lat = centerLat - localZ / mPerLat;
+        const lon = centerLon + localX / mPerLon;
+        const k = this._cacheKey(lat, lon);
+        keys[idx] = k;
+        if (this._terrainCache.has(k)){
+          elev[idx] = this._terrainCache.get(k);
+        } else {
+          missLocs.push({ latitude: lat, longitude: lon });
+          missIdx.push(idx);
+        }
+      }
+    }
+
+    // 2. Consultar sólo lo que no esté en caché — si todo está cacheado, salta el POST
+    if (missLocs.length){
+      const fetched = await this._fetchElevationBatch(missLocs);
+      // Si mientras tanto se lanzó otro build, abandonar (no contaminar caché)
+      if (mySerial !== this._terrainBuildSerial){ this._terrainBusy = false; return; }
+      if (!fetched){ this._terrainBusy = false; return; }
+      for (let k = 0; k < missIdx.length; k++){
+        const idx = missIdx[k];
+        const e = fetched[k];
+        elev[idx] = e;
+        this._terrainCache.set(keys[idx], e);
+      }
+    }
+
+    // Limitar caché para no crecer sin fin (LRU simple: tira a la mitad cuando excede)
+    if (this._terrainCache.size > 200000){
+      const entries = [...this._terrainCache.entries()];
+      this._terrainCache = new Map(entries.slice(entries.length/2));
+    }
+
+    // 3. Estadísticas
+    let maxLand = -Infinity, landCount = 0;
+    for (let k = 0; k < N; k++){
+      const e = elev[k];
+      if (e > maxLand) maxLand = e;
+      if (e > 1) landCount++;
+    }
+    if (maxLand < 1 || landCount < 5){
+      if (this._terrainMesh) this._terrainMesh.visible = false;
+      this._terrainCenter = { lat: centerLat, lon: centerLon, hasLand:false };
+      this._terrainBusy = false;
+      return;
+    }
+
+    // 4. Construir geometría con máscara circular y mezcla de costa
+    const size = 2 * radius;
+    const geom = new THREE.PlaneGeometry(size, size, seg, seg);
+    geom.rotateX(-Math.PI/2);
+    const positions = geom.attributes.position;
+    const colors    = new Float32Array(positions.count * 3);
+    const rOuter    = radius;            // borde exterior: forzado al mar
+    const rFade     = radius * 0.85;     // anillo de transición a partir de aquí
+
+    for (let j = 0; j <= seg; j++){
+      for (let i = 0; i <= seg; i++){
+        const idx = j*(seg+1) + i;
+        const localX = (i/seg - 0.5) * 2*radius;
+        const localZ = (j/seg - 0.5) * 2*radius;
+        const dist   = Math.hypot(localX, localZ);
+
+        // Atenuación circular: 1 dentro de rFade, 0 fuera de rOuter, smooth entre ambos
+        let mask = 1;
+        if (dist >= rOuter)      mask = 0;
+        else if (dist >  rFade){
+          const t = (dist - rFade) / (rOuter - rFade);
+          mask = 1 - t*t*(3 - 2*t);   // smoothstep
+        }
+
+        const eRaw = elev[idx];
+        const e    = eRaw * mask;   // fuera del anillo, sumir al nivel del mar
+
+        // Altura del vértice — bajo agua se baja levemente para que el océano lo tape
+        const y = (e < 0) ? Math.max(e*0.25, -4) : e;
+        positions.setY(idx, y);
+
+        // Color: paleta por elevación + blending con cyan de bajío en la franja [-3, +3]
+        let r, g, b;
+        if (e < -2)       { r=0.08; g=0.18; b=0.28; }   // bajío profundo
+        else if (e <  3)  {
+          // Costa: mezcla entre cyan bajío (-2) y arena (3)
+          const t = (e + 2) / 5;
+          r = 0.16 + (0.84-0.16)*t;
+          g = 0.34 + (0.74-0.34)*t;
+          b = 0.42 + (0.52-0.42)*t;
+        }
+        else if (e < 25)  { r=0.52; g=0.58; b=0.30; }
+        else if (e < 200) { r=0.34; g=0.46; b=0.22; }
+        else if (e < 600) { r=0.26; g=0.38; b=0.18; }
+        else if (e < 1500){ r=0.50; g=0.42; b=0.32; }
+        else if (e < 2500){ r=0.65; g=0.60; b=0.55; }
+        else              { r=0.92; g=0.90; b=0.88; }
+
+        // Atenuación de saturación cerca del borde para que se difumine en el mar
+        if (mask < 1){
+          const fadeC = mask;
+          r = r*fadeC + 0.10*(1-fadeC);
+          g = g*fadeC + 0.20*(1-fadeC);
+          b = b*fadeC + 0.30*(1-fadeC);
+        }
+        colors[idx*3+0] = r;
+        colors[idx*3+1] = g;
+        colors[idx*3+2] = b;
+      }
+    }
+    positions.needsUpdate = true;
+    geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geom.computeVertexNormals();
+
+    const mat = new THREE.MeshStandardMaterial({
+      vertexColors:true, roughness:0.95, metalness:0.0, flatShading:false
+    });
+
+    // Sustituir malla previa
+    if (this._terrainMesh){
+      this.scene.remove(this._terrainMesh);
+      this._terrainMesh.geometry.dispose();
+      this._terrainMesh.material.dispose();
+    }
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.receiveShadow = true;
+    mesh.castShadow    = false;
+    mesh.position.set(0, 0, 0);
+    this.scene.add(mesh);
+    this._terrainMesh   = mesh;
+    this._terrainCenter = { lat: centerLat, lon: centerLon, hasLand:true, maxLand };
+    this._terrainBusy   = false;
+    console.log(`Terreno: costa renderizada en ${centerLat.toFixed(3)}°, ${centerLon.toFixed(3)}° — máx ${maxLand.toFixed(0)} m, ${landCount} vértices firmes${missLocs.length<N?` (${N-missLocs.length} caché)`:''}.`);
+  }
+
+  maybeUpdateTerrain(nowSec){
+    // Comprobar a un ritmo manejable (no en cada frame)
+    if (nowSec - this._terrainLastCheck < TERRAIN_CHECK_S) return;
+    this._terrainLastCheck = nowSec;
+    if (this._terrainBusy) return;
+
+    const c = this._terrainCenter;
+    let needsBuild = false;
+    if (!c){
+      needsBuild = true;
+    } else {
+      const dNM = haversineNM(this.position.lat, this.position.lon, c.lat, c.lon);
+      if (dNM * 1852 > TERRAIN_REBUILD_M) needsBuild = true;
+    }
+    if (needsBuild){
+      // Lanzar sin await — la simulación sigue corriendo mientras descarga tiles
+      this._buildTerrain(this.position.lat, this.position.lon);
+    }
+  }
+
+  _updateTerrainPosition(){
+    // Mantener el terreno fijo geográficamente mientras la nave (en el origen 3D)
+    // se desplaza por el mar: el desfase entre la posición real y el centro del
+    // terreno se traduce a metros y se aplica al transform de la malla.
+    if (!this._terrainMesh || !this._terrainCenter || !this._terrainCenter.hasLand){
+      if (this._terrainMesh) this._terrainMesh.visible = false;
+      return;
+    }
+    this._terrainMesh.visible = true;
+    const c = this._terrainCenter;
+    const mPerLat = M_PER_LAT_DEG;
+    const mPerLon = mPerLat * Math.cos(c.lat * Math.PI/180);
+    // +x = este, +z = sur. El centro geográfico debe quedar a (cLon - shipLon, cLat - shipLat)
+    const dx = (c.lon - this.position.lon) * mPerLon;
+    const dz = (this.position.lat - c.lat) * mPerLat;
+    this._terrainMesh.position.set(dx, 0, dz);
   }
 
   setMapEra(era){
@@ -3623,7 +4213,12 @@ class SimulationEngine {
     document.getElementById('btn-do-save').addEventListener('click', ()=>{
       const name = (document.getElementById('save-slot-name').value || '').trim();
       if (!name){ alert('Pon un nombre al slot'); return; }
-      localStorage.setItem('colon-save-'+name, JSON.stringify(this._serializeState()));
+      try {
+        localStorage.setItem('colon-save-'+name, JSON.stringify(this._serializeState()));
+      } catch(e){
+        alert(`No se pudo grabar la partida: ${e.message}. Tal vez el almacenamiento del navegador esté lleno.`);
+        return;
+      }
       this._renderSlotList('save');
     });
 
@@ -3907,14 +4502,14 @@ class SimulationEngine {
     // Flecha de viento
     if (this.windArrow) this.windArrow.visible = !!this.config.windArrow;
     // Niebla
-    this.scene.fog = this.config.fog ? new THREE.FogExp2(0x0c1828, 0.003) : null;
+    this.scene.fog = this.config.fog ? new THREE.FogExp2(0x0c1828, 0.0001) : null;
 
     // Calidad del océano: regenerar la geometría
     const segMap = { low:64, medium:128, high:192, ultra:256 };
     const seg = segMap[this.config.oceanQuality] || 128;
     if (this.ocean && this.ocean.geometry.parameters.widthSegments !== seg){
       const old = this.ocean.geometry;
-      const ng = new THREE.PlaneGeometry(800, 800, seg, seg);
+      const ng = new THREE.PlaneGeometry(14000, 14000, seg, seg);
       ng.rotateX(-Math.PI/2);
       this.ocean.geometry = ng;
       old.dispose();
@@ -4192,11 +4787,27 @@ class SimulationEngine {
         const card = document.createElement('div');
         card.className = 'crew-card';
         const voys = (c.voyages||[1]).map(v=>`<span class="pill" style="color:#fff8e0;background:#7a4a14;border-color:#3a2410;margin-right:.2rem;">${'I'.repeat(v).replace('IIII','IV').replace('III','III')} viaje</span>`).join('');
+        // Imágenes contextuales adjuntas a la biografía
+        let extraImg = '';
+        if (c.id === 'juan-cosa'){
+          extraImg = `
+            <figure class="crew-figure" style="margin:.6rem 0 .2rem;">
+              <img src="https://www.livingmadrid.com/wp-content/uploads/2021/03/Mapa-Juan-de-la-Cosa-por-adolfo-gosalvez.png"
+                   alt="Mapamundi de Juan de la Cosa, 1500"
+                   loading="lazy"
+                   style="display:block;max-width:100%;height:auto;border:1px solid #8a5a20;background:#1a0d04;"
+                   onerror="this.parentNode.style.display='none';">
+              <figcaption class="src-cite" style="margin-top:.25rem;">
+                Mapamundi de Juan de la Cosa (1500), reproducción de Adolfo Gosálvez. Primera carta conocida con el Nuevo Mundo.
+              </figcaption>
+            </figure>`;
+        }
         card.innerHTML = `
           <h4>${c.name} <span class="pill" style="color:#5b3a1a;border-color:#8a5a20;">${shipLabel[c.ship]||c.ship}</span></h4>
           <div class="crew-role">${c.role}</div>
           <div class="mt-1">${voys}</div>
           ${c.bio ? `<div class="crew-bio">${c.bio}</div>` : ''}
+          ${extraImg}
           <div class="crew-duties"><b>Deberes a bordo:</b> ${c.duties}</div>
           <div class="src-cite mt-1">Fuente: ${c.source}</div>
         `;
@@ -4245,6 +4856,48 @@ class SimulationEngine {
         </table>
       </div>
     `;
+
+    // Pestaña Anatomía — partes del casco, cubierta y bodega
+    const anaDiv = document.getElementById('info-tab-anatomy');
+    if (anaDiv){
+      const sec = (title, items) => `
+        <div class="crew-card mb-3">
+          <h4>${title}</h4>
+          <dl style="color:#3a2410;line-height:1.5;margin-top:.3rem;">
+            ${items.map(([n,d])=>`<dt style="font-weight:700;margin-top:.4rem;">${n}</dt><dd style="margin-left:.6rem;">${d}</dd>`).join('')}
+          </dl>
+        </div>`;
+      anaDiv.innerHTML =
+        sec("1. Partes del Casco (estructura exterior)", [
+          ["Quilla", "Espinazo del barco. Pieza de madera robusta que recorre el fondo de la nave de proa a popa, sobre la que se construye todo el esqueleto. <i>Visible en el simulador como listón oscuro bajo el casco.</i>"],
+          ["Proa",   "Parte delantera del barco, estilizada para cortar el agua. Lleva la roda o branque vertical y el bauprés sobresaliente."],
+          ["Popa",   "Parte trasera de la nave, más alta y redondeada en la carabela, donde se ubicaban los alojamientos del Almirante."],
+          ["Estribor", "Costado derecho mirando hacia proa."],
+          ["Babor",  "Costado izquierdo mirando hacia proa."],
+          ["Obra viva (carena)", "Parte del casco que queda sumergida bajo el agua. En el simulador se distingue por el tono <b>oscuro</b> (brea y grasa para proteger del bicho y los moluscos)."],
+          ["Obra muerta", "Parte del casco que sobresale de la línea de flotación hasta la cubierta — tono claro de madera natural."],
+          ["Pantoque", "Zona curva del casco que une el fondo plano con los costados verticales."],
+          ["Codaste y roda", "Postes verticales en popa y proa que rematan la quilla."],
+          ["Timón de codaste", "Gran pala de madera articulada en la popa. <b>Una de las grandes innovaciones del XIII-XV</b>, permitió gobernar el barco con mucha más precisión que los antiguos remos laterales. Visible en el simulador colgando del codaste."],
+          ["Caña del timón", "Palanca horizontal que entra por la popa del alcázar y maneja el timón."]
+        ]) +
+        sec("2. Partes de la Cubierta (zona superior)", [
+          ["Cubierta principal", "Espacio central abierto donde se realizaba la mayor parte del trabajo diario: maniobra de cabos, reparación de velas, comer, dormir a la intemperie."],
+          ["Castillo de proa", "Estructura elevada en la parte delantera. Plataforma de defensa y resguardo de carga o tripulación frente a las olas."],
+          ["Castillo de popa (alcázar)", "Zona más elevada de popa. Centro de mando donde el capitán y los oficiales vigilaban el rumbo y guardaban astrolabio, cuadrante y ampolleta."],
+          ["Escotillas", "Aberturas en la cubierta con rejillas o tapas de madera, por donde se baja a la bodega para sacar provisiones o material. <i>Dos rejillas visibles en el simulador a proa y popa de la cubierta principal.</i>"],
+          ["Borda", "Borde superior de los costados del barco que sobresale de la cubierta — pared sólida de madera (no balaustrada) que evita que los marineros caigan al mar."],
+          ["Trancanil", "Listón de unión entre cubierta y costado, canaliza el agua de lluvia o de las olas hacia los <b>imbornales</b> (agujeros de desagüe perforados en la borda)."],
+          ["Cap rail / regala", "Listón superior que remata la borda y sirve de apoyo a la mano."]
+        ]) +
+        sec("3. Interior — la Bodega", [
+          ["Bodega", "Espacio más profundo del barco, bajo la cubierta principal. Contiene el <b>lastre</b> (piedras pesadas para dar estabilidad), agua dulce en pipas, vino, tocino, queso, garbanzos, bizcocho y la pólvora. Las raciones se sacaban por las escotillas."],
+          ["Lastre", "Piedras del río Tinto cargadas en Palos para dar estabilidad al casco."],
+          ["Pipas y barriles", "Recipientes de roble para agua dulce (200 días para 90 hombres) y vino (la ración era medio azumbre = casi un litro)."],
+          ["Pañol de pólvora", "Compartimento estanco para la pólvora de las lombardas y falconetes."]
+        ]) +
+        `<div class="src-cite mt-3">Terminología basada en los <i>Glosarios náuticos</i> de Martínez-Hidalgo (Museo Marítimo de Barcelona) y en el <i>Diccionario marítimo español</i> de O'Scanlan (1831).</div>`;
+    }
 
     // Pestaña Fuentes
     const srcDiv = document.getElementById('info-tab-sources');
@@ -4487,9 +5140,13 @@ class SimulationEngine {
   /* ------------------------------ Save / Load ------------------------------ */
   _saveSlots(){
     const out = [];
-    for (let i=0; i<localStorage.length; i++){
-      const k = localStorage.key(i);
-      if (k && k.startsWith('colon-save-')) out.push(k.slice('colon-save-'.length));
+    try {
+      for (let i=0; i<localStorage.length; i++){
+        const k = localStorage.key(i);
+        if (k && k.startsWith('colon-save-')) out.push(k.slice('colon-save-'.length));
+      }
+    } catch(e){
+      console.warn("No se pudo leer la lista de partidas:", e.message);
     }
     return out.sort();
   }
@@ -4601,16 +5258,33 @@ class SimulationEngine {
       b.addEventListener('click', ()=>{
         const slot = b.dataset.slot, act = b.dataset.act;
         if (act === 'load'){
-          const s = JSON.parse(localStorage.getItem('colon-save-'+slot));
-          this._applyState(s);
+          let s = null;
+          try {
+            s = JSON.parse(localStorage.getItem('colon-save-'+slot));
+          } catch(e){
+            alert(`Partida «${slot}» corrupta y no se puede cargar: ${e.message}`);
+            return;
+          }
+          if (!s){ alert(`Partida «${slot}» vacía o ilegible.`); return; }
+          try {
+            this._applyState(s);
+          } catch(e){
+            alert(`Error al restaurar la partida: ${e.message}. La sesión queda en su estado anterior.`);
+            return;
+          }
           document.getElementById('modal-saveload').classList.remove('show');
         } else if (act === 'save'){
           if (!confirm(`¿Sobrescribir «${slot}»?`)) return;
-          localStorage.setItem('colon-save-'+slot, JSON.stringify(this._serializeState()));
+          try {
+            localStorage.setItem('colon-save-'+slot, JSON.stringify(this._serializeState()));
+          } catch(e){
+            alert(`No se pudo grabar: ${e.message}`);
+            return;
+          }
           this._renderSlotList(mode);
         } else if (act === 'del'){
           if (!confirm(`¿Borrar «${slot}»?`)) return;
-          localStorage.removeItem('colon-save-'+slot);
+          try { localStorage.removeItem('colon-save-'+slot); } catch(e){}
           this._renderSlotList(mode);
         }
       });
@@ -4912,6 +5586,11 @@ class SimulationEngine {
       // ---- Velas de esa nave ----
       const shipCfg = SHIPS[k];
       const sailsToShow = (k === this.shipKey) ? this.sailsState : null;
+      // Ángulo aparente del viento sobre esta nave (en grados, signo = babor/estribor)
+      const shipHeading = (k === this.shipKey) ? this.heading : (this.shipStates[k]?.heading ?? this.heading);
+      const apparent = ((this.windDir - shipHeading + 540) % 360) - 180;
+      // Pandeo (curl) de la vela proporcional al viento aparente y al área izada
+      const curlFactor = Math.min(1, this.windSpd / 25);
       shipCfg.sails.forEach(s=>{
         const mesh = ship.userData.sails[s.id];
         if (!mesh) return;
@@ -4921,7 +5600,19 @@ class SimulationEngine {
         if (s.id !== "cebadera"){
           mesh.position.y = mesh.userData.refPosY - mesh.userData.refHeight*(1-pct)*0.5;
         }
-        mesh.rotation.x = Math.sin(t*1.5 + s.area*0.01 + (k.length)) * 0.04 * pct;
+        // Aleteo natural (alta frecuencia, pequeña amplitud)
+        const flutter = Math.sin(t*1.5 + s.area*0.01 + (k.length)) * 0.04 * pct;
+        // Pandeo por presión del viento: vela cazada se hincha; ceñida apenas
+        const absA = Math.abs(apparent);
+        const press = (absA < 60) ? 0 : Math.min(1, (absA-60)/90);   // 0 ceñida, 1 popa
+        const bow = curlFactor * press * pct;
+        // Asimétrico según babor/estribor (signo del apparent define lado vencido)
+        const sgn = (apparent >= 0) ? 1 : -1;
+        // Pandeo en Y (girar la vela un poco) y en X (curva longitudinal)
+        mesh.rotation.x = flutter + bow * 0.06;
+        mesh.rotation.y = sgn * bow * 0.18;
+        // Escala lateral leve para sugerir el abombamiento (sin distorsionar mucho)
+        mesh.scale.x = 1.0 + bow * 0.08;
       });
 
       // ---- Bandera ondea ----
@@ -4969,6 +5660,32 @@ class SimulationEngine {
     this.oceanUniforms.uSunDir.value.set(Math.cos(sunAng), Math.max(0.1, Math.sin(sunAng)), 0.6).normalize();
     const night = Math.max(0, -Math.sin(sunAng));
     this.scene.background = new THREE.Color().setRGB(0.04+0.18*(1-night), 0.09+0.18*(1-night), 0.15+0.18*(1-night));
+
+    // ---- Niebla dinámica: cuanto más viento, más densa ----
+    // Bonanza (<8 kn) ~0.00005 → costa visible a >10 km
+    // Brisa  (8-22 kn) ~0.0001 → costa visible a ~6-9 km
+    // Frescachón (22-40 kn) ~0.0003 → costa visible a ~3 km
+    // Temporal (>40 kn) ~0.0008 → costa visible a ~1 km
+    if (this.scene.fog && this.config.fog){
+      const ws = this.windSpd;
+      let target;
+      if (ws < 8)       target = 0.00005;
+      else if (ws < 22) target = 0.00005 + (ws - 8)/14 * (0.0001 - 0.00005);
+      else if (ws < 40) target = 0.0001  + (ws - 22)/18 * (0.0003 - 0.0001);
+      else              target = Math.min(0.001, 0.0003 + (ws - 40)/20 * (0.0008 - 0.0003));
+      // Suavizado para que no haya cambios bruscos
+      this.scene.fog.density += (target - this.scene.fog.density) * 0.02;
+      // El color de niebla se aclara con el día y oscurece de noche
+      const fc = this.scene.fog.color;
+      fc.setRGB(
+        0.04 + 0.42*(1-night),
+        0.07 + 0.42*(1-night),
+        0.14 + 0.36*(1-night)
+      );
+    }
+
+    // ---- Terreno: desplazar la malla para que quede fija geográficamente ----
+    this._updateTerrainPosition();
 
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
@@ -5124,6 +5841,7 @@ class SimulationEngine {
     const dt = Math.min(0.1, (now - this.lastFrame)/1000);
     this.lastFrame = now;
     this.update(dt);
+    this.maybeUpdateTerrain(now/1000);
     this.render(dt);
     // Throttle de syncUI a 10 Hz: la escena 3D corre a 60 Hz pero las
     // actualizaciones del DOM cuestan caro y el ojo no nota la diferencia
@@ -5139,11 +5857,36 @@ class SimulationEngine {
    6.  BOOTSTRAP
 ============================================================================ */
 window.addEventListener('DOMContentLoaded', ()=>{
+  // --- Splash: cuadro de Garnelo durante 5 segundos mientras carga todo ---
+  const splash = document.getElementById('splash-screen');
+  const splashImg = document.getElementById('splash-img');
+  if (splashImg){
+    if (splashImg.complete && splashImg.naturalWidth > 0) splashImg.classList.add('loaded');
+    splashImg.addEventListener('load', ()=> splashImg.classList.add('loaded'));
+    splashImg.addEventListener('error', ()=>{
+      // Si Wikimedia no responde, sigue mostrando título y leyenda sin imagen
+      splashImg.style.display = 'none';
+    });
+  }
+  // Inicializa el motor en segundo plano (en pausa, en Palos)
   window.App = new SimulationEngine();
-  // Velocidad por defecto: tiempo real 1:1
   window.App.setSpeed(1);
-  // Resize tras layout
   setTimeout(()=>window.App.onResize(), 300);
+
+  // Marca el botón de play como invitación a empezar
+  const btnPlay = document.getElementById('btn-play');
+  if (btnPlay){
+    btnPlay.classList.add('invite-start');
+    btnPlay.addEventListener('click', ()=> btnPlay.classList.remove('invite-start'), { once:true });
+  }
+
+  // Cierra la splash a los 5 s exactos
+  setTimeout(()=>{
+    if (splash){
+      splash.classList.add('fading');
+      setTimeout(()=> splash.parentNode && splash.parentNode.removeChild(splash), 800);
+    }
+  }, 5000);
 });
 </script>
 </body>
