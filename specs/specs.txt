@@ -1,0 +1,117 @@
+# TECHNICAL SPECIFICATIONS: HYPER-REALISTIC 1492 VOYAGE SIMULATOR
+## GOAL: Create a single-file, self-contained, giant HTML application (HTML+CSS+JS) using Three.js and Mapbox/Leaflet (via CDN) representing Columbus's voyages with absolute historical and mathematical rigor.
+
+---
+
+## 1. PROJECT ARCHITECTURE & CORE CONSTRAINTS
+*   **Delivery:** Single, giant, ultra-detailed `index.html` file. No external local assets. All libraries (Three.js, Mapbox/Leaflet/OpenLayers, TailwindCSS) must be loaded via official, reliable CDNs.
+*   **Traceability Principle:** Every single data point, crew member name, coordinate, or event must include an inline data attribute or metadata object linking to an authoritative open-source historical source (e.g., *Diario de a bordo de Cristóbal Colón*, *Archivo General de Indias*, *Navarrete Collection*).
+*   **Code Quality:** No placeholders, no `// TODO`, no truncated functions. Write full, production-ready procedural and object-oriented JavaScript.
+
+---
+
+## 2. CARTOGRAPHY & COORDINATE SYSTEMS
+*   **Dual Layer Map Engine:**
+    *   **Layer A (Historical):** 15th-century aesthetic style (parchment texture, wind roses, sea monsters, historical toponyms used by Columbus).
+    *   **Layer B (Modern):** Real-world satellite/vector map overprinted with current geopolitical boundaries.
+    *   **Opacity Slider:** Smooth transition between 15th-century and 2026 map layers.
+*   **Coordinate Display Matrix (Real-Time HUD):**
+    1.  *Historical Apparent Coordinates:* Based on Columbus's dead reckoning (*estima*) and primitive quadrant/astrolabe readings.
+    2.  *Historical Magnetic Coordinates:* Account for the 1492 magnetic declination (isogonic lines of the period, implementing historical geomagnetic models like gufm1 if applicable).
+    3.  *Modern Magnetic Coordinates:* Real-time calculation for today's date: **May 16, 2026**.
+    4.  *Modern Legal/GPS Coordinates:* True WGS84 coordinates.
+
+---
+
+## 3. HISTORICAL ENGINE & CREW DATABASE
+*   **Manifest & Crew Manifest:** Integrate the complete, verified historical roster of the first voyage (e.g., Juan de la Cosa, Martín Alonso Pinzón, Rodrigo de Triana, down to the last grumete).
+*   **First-Person Role Switching:** A UI dropdown allows the user to "step into the shoes" of any crew member. Changing roles changes the UI perspective, duties log, and available actions (e.g., Columbus sees navigation charts; a helmsman sees rigging stress; a cooper sees water/ration status).
+*   **Logbook Sync:** The simulation timeline must strictly match the official ship logs (*Cartas de Colón*). On specific historical dates, specific scripted events, weather changes, or mutiny risks must trigger automatically, requiring user decisions.
+
+---
+
+## 4. 3D NAUTICAL SIMULATION ENGINE (THREE.JS)
+*   **Visual Representation:** A fully animated 3D view of the vessel (Santa María, Pinta, or Niña) floating dynamically on realistic water.
+*   **Advanced Ocean Shader:** 
+    *   Implement a custom Three.js shader using a **Gerstner/Trochoidal Wave Algorithm** to displace the geometry of a high-density plane.
+    *   Waves must have sharp crests and smooth troughs, reacting dynamically to simulated wind speed and direction.
+    *   The ship's transform matrix (Pitch, Roll, Yaw, and Heave) must be mathematically bound to the height and slope of the Gerstner waves at the ship's current position.
+*   **Rigging & Sails Physics (Aparejos):**
+    *   Every sail (Trinquete, Mayor, Vela de Gavia, Mezana, Cebadera) must be individual geometry that furls/unfurls based on user commands.
+    *   Aerodynamic calculation: Ship speed depends on wind angle relative to the specific sail configurations (Aparejo real de la época).
+
+---
+
+## 5. USER INTERFACE & NAVIGATION HUD
+*   **15th Century Instrument Panel:** Interactive 3D/2D renders of an Astrolabe, Quadrant, Compass Rose (with 1492 deviation), and Ampolleta (hourglass for time tracking).
+*   **Time Control:** Play, Pause, and Acceleration multipliers (1x, 10x, 100x) syncing the hour, day, month, and year (starting August 3, 1492).
+*   **Telemetry Panel:** Comprehensive readouts of:
+    *   Wind Speed & Direction (Knots/Beaufort equivalent)
+    *   Ship Speed through water vs. Speed over ground
+    *   Leeway (*Abatimiento*) and Drift (*Deriva*)
+    *   Rigging Strain & Hull Integrity
+
+---
+
+## 6. SOURCE CODE STRUCTURE (SINGLE FILE)
+Generate the file following this exact template to prevent browser memory leaks and ensure extreme performance:
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador Histórico Realista: Viajes del Descubrimiento</title>
+    <!-- CDNs: TailwindCSS, FontAwesome, Three.js, OrbitControls, Leaflet/Mapbox, Custom Shaders -->
+    <script src="[https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js](https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js](https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js)"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <style>
+        /* Custom UI typography, parchment filters, and layout fixes */
+    </style>
+</head>
+<body class="bg-slate-900 text-amber-100 overflow-hidden h-screen w-screen flex flex-col">
+
+    <!-- MAIN UI LAYOUT -->
+    <div id="app-container" class="relative flex-1 flex row">
+        <!-- Left Panel: 2D Dual Map -->
+        <div id="map-container" class="w-1/2 h-full relative"></div>
+        
+        <!-- Right Panel: Three.js 3D View -->
+        <div id="canvas-container" class="w-1/2 h-full relative">
+            <div id="hud-overlay" class="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
+                <!-- Data matrices go here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT ARCHITECTURE -->
+    <script>
+        // 1. HISTORICAL DATASETS & CREDENTIALS (JSON formats with 'source' fields)
+        const CREW_DATABASE = [...]; 
+        const HISTORICAL_LOGBOOK = [...];
+
+        // 2. GEOMAGNETIC & COORDINATE MATHEMATICAL MODELS
+        function calculate1492MagneticDeclination(lat, lon) { ... }
+        function calculate2026MagneticDeclination(lat, lon) { ... }
+
+        // 3. THREE.JS GERSTNER WAVE OCEAN & VESSEL SETUP
+        const GerstnerShader = { ... };
+
+        // 4. MAIN SIMULATION CONTROLLER (TICK ENGINE)
+        class SimulationEngine {
+            constructor() {
+                // Initialize Maps, Three.js scene, UI Event Listeners
+            }
+            update(deltaTime) {
+                // Physics, Wave displacement, Telemetry calculations, UI Sync
+            }
+        }
+
+        // 5. INITIALIZATION ON LOAD
+        window.addEventListener('DOMContentLoaded', () => {
+            window.App = new SimulationEngine();
+        });
+    </script>
+</body>
+</html>
