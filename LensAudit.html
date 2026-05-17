@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Auditoría de Lentes — Colón 1492</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English:ital@0;1&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#1c1208;color:#f3e7c9;font-family:'IM Fell English',serif;line-height:1.5;}
+  header.audit-header{background:#0f0904;border-bottom:2px solid #7a4a14;padding:1.5rem 2rem;}
+  header h1{font-family:'UnifrakturCook',serif;color:#f6cf85;font-size:2.4rem;margin:0;letter-spacing:.05em;}
+  header .subtitle{font-family:'Cinzel',serif;color:#d4a35a;letter-spacing:.18em;font-size:.78rem;}
+  header p.intro{max-width:1100px;margin-top:.8rem;color:#e7d4a8;font-size:.95rem;}
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.8rem;margin-top:1rem;max-width:1100px;}
+  .summary .stat{background:rgba(122,74,20,.18);border:1px solid #7a4a14;padding:.6rem .8rem;}
+  .summary .stat .label{font-family:'Cinzel',serif;color:#d4a35a;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;}
+  .summary .stat .value{color:#f6cf85;font-size:1.5rem;font-weight:700;}
+  nav.filters{background:#0f0904;position:sticky;top:0;z-index:50;padding:.65rem 2rem;border-bottom:1px solid #4f2e10;display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;}
+  nav.filters label{color:#d4a35a;font-family:'Cinzel',serif;font-size:.74rem;letter-spacing:.08em;}
+  nav.filters select,nav.filters input{background:#1c1208;color:#f3e7c9;border:1px solid #7a4a14;padding:.32rem .55rem;font-family:'IM Fell English',serif;font-size:.92rem;}
+  main{padding:1.4rem 2rem 3rem;max-width:1400px;margin:0 auto;}
+  .lens-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:1rem;}
+  .lens{background:#231609;border:1px solid #4f2e10;padding:.9rem 1rem;display:flex;flex-direction:column;gap:.45rem;transition:border-color .15s,transform .15s;}
+  .lens:hover{border-color:#f6cf85;transform:translateY(-1px);}
+  .lens .head{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;}
+  .lens .num{font-family:'Cinzel',serif;color:#8a5a20;font-size:.78rem;font-weight:700;letter-spacing:.1em;}
+  .lens h3{font-family:'Cinzel',serif;color:#f6cf85;margin:0;font-size:1.05rem;font-weight:700;line-height:1.2;}
+  .lens .en{color:#7a5a30;font-style:italic;font-size:.78rem;}
+  .lens .badge-cat{background:rgba(122,74,20,.5);color:#f3e7c9;border:1px solid #7a4a14;padding:.1rem .45rem;font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;}
+  .lens .desc{color:#e7d4a8;font-size:.86rem;}
+  .lens .desc b{color:#f6cf85;}
+  .lens .game{background:rgba(60,35,15,.55);border-left:3px solid #7a4a14;padding:.45rem .6rem;color:#f3e7c9;font-size:.84rem;}
+  .lens .game::before{content:"Cumplimiento en Colón 1492 — ";font-family:'Cinzel',serif;color:#d4a35a;font-size:.7rem;letter-spacing:.05em;}
+  .lens .improvements{background:rgba(40,80,40,.18);border-left:3px solid #5a8c3a;padding:.4rem .6rem;color:#cfe6b8;font-size:.82rem;}
+  .lens .improvements::before{content:"Mejoras para 100% — ";font-family:'Cinzel',serif;color:#9fd070;font-size:.7rem;letter-spacing:.05em;}
+  .lens .score-bar{position:relative;height:14px;background:#0f0904;border:1px solid #4f2e10;}
+  .lens .score-fill{position:absolute;inset:0;background:linear-gradient(90deg,#7a1f1f 0%,#a06420 40%,#8a8a20 60%,#5a8c3a 80%,#3aa860 100%);}
+  .lens .score-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.78rem;color:#fff8e0;text-shadow:0 0 4px #000;}
+  .score-red{color:#ff7a7a;}
+  .score-orange{color:#ffa050;}
+  .score-yellow{color:#f0d050;}
+  .score-green{color:#9fd070;}
+  footer.audit-footer{margin-top:2rem;padding:1.4rem 2rem;background:#0f0904;border-top:2px solid #7a4a14;color:#e7d4a8;}
+  footer h2{font-family:'UnifrakturCook',serif;color:#f6cf85;}
+  footer ul{padding-left:1.2rem;}
+  footer li b{color:#f6cf85;}
+  .strengths{color:#9fd070;} .weaknesses{color:#ff9070;}
+  @media print {
+    nav.filters{display:none;}
+    .lens-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header class="audit-header">
+  <div class="subtitle">AUDITORÍA DE EXPERIENCIA DE JUEGO · METODOLOGÍA JESSE SCHELL · 100 LENTES · VERSIÓN ITERACIÓN 9</div>
+  <h1>Colón 1492 — Auditoría según <i>The Art of Game Design: A Book of Lenses</i></h1>
+  <p class="intro">
+    Análisis lente a lente del simulador histórico <b>Colón 1492</b> (descubrimiento del Nuevo Mundo,
+    cuatro viajes documentados con fuentes abiertas) frente al marco de Jesse Schell — 100 lentes para
+    interrogar el diseño. Por cada lente: descripción oficial traducida, cumplimiento actual del juego,
+    porcentaje y mejoras para alcanzar el 100%. Restricciones del proyecto: <i>rigor histórico máximo,
+    física realista, fichero HTML único sin gamificación que altere la verdad documental.</i>
+  </p>
+  <p class="intro" style="margin-top:.6rem;color:#bd9a5d;">
+    <b>Cambios desde la iteración previa:</b> sustitución íntegra de la iconografía emoji por sprite SVG de línea (estilo grabado), sellos del Diario en numerales romanos sobre cuño de lacre, monogramas serif para los oficios de la tripulación, y reorganización del HUD — conmutador unificado <i>[Mapa] [Naves]</i> en la cabecera con tristate (split / Mapa solo / Naves solo) y eliminación de solapes con la barra de vistas cinemáticas.
+  </p>
+  <div class="summary">
+    <div class="stat"><div class="label">Lentes auditadas</div><div class="value" id="sum-count">—</div></div>
+    <div class="stat"><div class="label">Puntuación media</div><div class="value" id="sum-avg">—</div></div>
+    <div class="stat"><div class="label">Lentes ≥ 80%</div><div class="value" id="sum-strong">—</div></div>
+    <div class="stat"><div class="label">Lentes ≤ 40%</div><div class="value" id="sum-weak">—</div></div>
+    <div class="stat"><div class="label">Fecha auditoría</div><div class="value" style="font-size:1rem;">17 mayo 2026</div></div>
+  </div>
+</header>
+
+<nav class="filters">
+  <label>Categoría
+    <select id="filter-cat">
+      <option value="all">Todas</option>
+    </select>
+  </label>
+  <label>Puntuación
+    <select id="filter-score">
+      <option value="all">Todas</option>
+      <option value="lo">≤ 40 % (débiles)</option>
+      <option value="mid">41–79 % (medias)</option>
+      <option value="hi">≥ 80 % (fuertes)</option>
+    </select>
+  </label>
+  <label>Buscar
+    <input type="text" id="filter-search" placeholder="nombre o palabra clave…" style="min-width:220px;">
+  </label>
+  <label>Orden
+    <select id="filter-sort">
+      <option value="num">Número de lente</option>
+      <option value="scoreDesc">Puntuación ↓</option>
+      <option value="scoreAsc">Puntuación ↑</option>
+    </select>
+  </label>
+</nav>
+
+<main>
+  <div class="lens-grid" id="lens-grid"></div>
+</main>
+
+<footer class="audit-footer">
+  <h2>Síntesis ejecutiva</h2>
+  <p>El simulador puntúa muy alto en las dimensiones que mejor sirven a su propósito didáctico-histórico:
+  <b>Resonancia, Historia, Avatar, Mundo, Belleza, Interés Inherente y Tecnología</b>. Sus debilidades
+  estructurales están donde el marco de Schell asume un juego competitivo o social
+  (<b>Competición, Cooperación, Triangularidad, Recompensa, Castigo</b>), donde el cumplimiento es bajo
+  por <i>elección consciente</i> — gamificar estos ejes alteraría la verdad documental que es la razón
+  de ser del proyecto.</p>
+
+  <h3 class="strengths">5 fortalezas (lentes ≥ 90%)</h3>
+  <ul id="top-strengths"></ul>
+
+  <h3 class="weaknesses">5 debilidades (lentes &lt; 35%)</h3>
+  <ul id="top-weaknesses"></ul>
+
+  <h3 style="color:#bd9a5d;">Lentes capadas por diseño (no pueden alcanzar 100% sin romper el rigor histórico)</h3>
+  <p>Las siguientes lentes asumen multijugador, comunidad o monetización. <b>Llevarlas al 100% implicaría
+    convertir el simulador en un MMO o un free-to-play, lo que altera la premisa</b> (la travesía vivida desde dentro,
+    sin distorsión comercial ni social). Quedan capadas con justificación:</p>
+  <ul>
+    <li><b>#36 Competición · #37 Cooperación · #38 Competición vs Cooperación</b>: el simulador es single-player por construcción. Añadir competición o cooperación introduciría jugadores anacrónicos en un drama documental.</li>
+    <li><b>#84 Amistad · #86 Comunidad · #88 Amor</b>: el ámbito relacional aquí es el de los tripulantes históricos, no el de los jugadores. La amistad y comunidad están en la pestaña «Tripulación», no en un foro paralelo.</li>
+    <li><b>#94 El Cliente · #95 El Pitch · #96 Beneficio</b>: proyecto didáctico abierto, sin cliente comercial, sin pitch ni modelo de negocio. La monetización rompería el carácter de fuente abierta.</li>
+    <li><b>#73 Colusión · #87 Griefing</b>: irrelevantes en single-player. Griefing puntúa alto (100) precisamente porque no hay riesgo.</li>
+  </ul>
+  <p style="font-style:italic;color:#bd9a5d;">Sus puntuaciones reflejan <b>ajuste a la intención del diseño</b>, no fracaso. Subirlas significaría traicionar el manifiesto.</p>
+
+  <h3>Hoja de ruta propuesta (siguiente iteración)</h3>
+  <ol>
+    <li><b>Curva de interés y tutorial</b> — añadir onboarding de 60 s con tres bocadillos: tiempo, velas, mapa. Lentes 18, 53, 56, 60, 61.</li>
+    <li><b>Recompensas históricas no inventadas</b> — sellos del Diario al cumplir cada hito real (12 oct, 25 dic, 15 mar...). Lentes 40, 49, 80.</li>
+    <li><b>Modos de dificultad</b> — Cabotaje (autopilot) / Almirante (manual completo) / Capitán General (manual + averías). Lentes 18, 27, 31.</li>
+    <li><b>Triangularidad</b> — más decisiones con coste-recompensa cuantificado (raciones vs. velocidad; profundidad de quilla vs. abrigo de puerto). Lentes 32, 33.</li>
+    <li><b>Vista del autoplay como película</b> — modo &laquo;Crónica&raquo; que reproduce el primer viaje en 8 minutos con cámara cinematográfica. Lentes 17, 53, 63.</li>
+    <li><b>Telemetría comparada con el Diario</b> — overlay "Hoy llevas X leguas; Colón apuntó Y". Lentes 49, 57, 64.</li>
+    <li><b>Documentación abierta</b> — README y guía de fuentes ya existen; añadir <i>devlog público</i>. Lentes 89, 90.</li>
+  </ol>
+
+  <p style="margin-top:1.5rem;font-style:italic;color:#8a6532;">Auditoría redactada manualmente sobre la lista canónica de Schell (Wiley/Morgan Kaufmann, 3.ª edición, 2019). Cada lente cita las preguntas-clave del autor traducidas al castellano.</p>
+</footer>
+
+<script>
+/* ============================================================================
+   DATOS: las 100 lentes de Schell, descripción oficial, cumplimiento y % en
+   Colón 1492. Categorías derivadas de los capítulos del libro.
+============================================================================ */
+const LENSES = [
+  // ───── Cap 1-5: Diseñador, Experiencia, Tema, Idea ─────
+  { n:1, es:"Experiencia Esencial", en:"Essential Experience", cat:"Diseñador",
+    desc:"<b>¿Qué experiencia quiero que viva el jugador?</b> ¿Qué es esencial de esa experiencia? ¿Cómo puede mi juego capturar esa esencia?",
+    game:"La esencia buscada es <i>la travesía de 1492 vivida desde dentro</i>: la incertidumbre del alisio, la soledad oceánica, el conocimiento técnico del Almirante. La doble carta (XV vs moderna), la matriz de coordenadas y el Diario sincronizado lo logran.",
+    score:90,
+    improv:"Una intro narrada de 30 s con la voz del Almirante reforzaría la esencia en el primer minuto." },
+  { n:2, es:"Sorpresa", en:"Surprise", cat:"Diseñador",
+    desc:"<b>¿Qué sorprenderá al jugador?</b> ¿Sorprende la historia? ¿Sorprenden las reglas? ¿Sorprende cuando ven la portada o leen la caja?",
+    game:"Eventos del Diario + ocho nuevos secundarios documentados: <b>paxarillo cantor del 20 sept, mar alta sin viento del 23 sept, descripción de los naturales del 13 oct, combate de la Bahía de las Flechas, bautizo de Borinquen, aviso ignorado a Ovando, combate de Belén con Quibián</b>. Aparición progresiva de la costa 3D al acercarse a tierra.",
+    score:88,
+    improv:"Eventos del IV viaje aún subrepresentados (Lettera Rarissima, ratón rapiñador de Hernando)." },
+  { n:3, es:"Diversión", en:"Fun", cat:"Diseñador",
+    desc:"<b>¿Qué partes de mi juego son divertidas?</b> ¿Qué partes deberían serlo más?",
+    game:"Diversión por <i>flow de explorador</i>, <i>asombro estético</i> y <i>riesgo viviente</i>: ajustar velas, ver llegar la costa, sortear un huracán de las Indias, oír las campanas. <b>Temporales climatológicos</b> con seis categorías reales · <b>ocho encuentros documentados con poblaciones nativas</b> (taínos de Guanahaní, embajada al Gran Khan en Cuba, recepción de Guacanagarí, ciguayos de Samaná, Caonabo prendido, perlas de Paria, mayas de Guanaja, Quibián de Veragua) disparados por proximidad y fecha, cada uno con cita literal del Diario, Las Casas ó Hernando Colón · cuatro mini-juegos navales con física honesta.",
+    score:88,
+    improv:"Pequeños encuentros opcionales con pueblos locales en aldeas costeras (lucayos, ciboneyes, lucumíes)." },
+  { n:4, es:"Curiosidad", en:"Curiosity", cat:"Diseñador",
+    desc:"<b>¿Qué preguntas pone mi juego en la mente del jugador?</b> ¿Qué hago para que les importen? ¿Cómo logro que inventen más?",
+    game:"&laquo;¿Cuántos días faltan para tierra?&raquo;, &laquo;¿qué decidió Colón el 25 sept?&raquo;, &laquo;¿qué isla es Guanahaní hoy?&raquo;. Panel de hito + decisiones contrafactuales + <b>glosario hover sobre términos del XV (abatimiento, deriva, ampolleta, singladura, estima, beaufort)</b>.",
+    score:92,
+    improv:"Una micro-cita del Diario al pulsar sobre un término del glosario." },
+  { n:5, es:"Valor Endógeno", en:"Endogenous Value", cat:"Diseñador",
+    desc:"<b>¿Qué tiene valor dentro de mi juego?</b> ¿Cómo conecto con lo que importa al jugador en el mundo real?",
+    game:"Valor endógeno: hitos históricos, integridad del casco, moral. <b>Una lectura magistral del astrolabio (&lt;0,5° de error) tiene valor mecánico explícito</b> (+1,5 moral), y la bitácora exportable consagra las elecciones del jugador. <b>El panel «Trayectoria del Almirante»</b> ofrece telemetría exportable (tomas, error medio de altura, temporales sobrevividos, motines superados, fidelidad a la senda histórica) que da valor reificado a la práctica adquirida. Conecta con la satisfacción real de aprender navegación del XV.",
+    score:85,
+    improv:"Ranking comparativo opcional del jugador con un perfil promedio de pilotos del XV (sólo local, sin ranking online)." },
+  { n:6, es:"Resolución de Problemas", en:"Problem Solving", cat:"Diseñador",
+    desc:"<b>¿Qué problemas requiere resolver mi juego?</b> ¿Hay problemas ocultos que emergen?",
+    game:"Problemas explícitos: configurar velas, leer la carta, decidir en los puntos críticos. <b>Panel PLAZOS con cuenta atrás cuantificada</b>: días para agotar el agua dulce, días al próximo hito histórico al ritmo actual, días hasta el casco crítico (40%), <b>y ahora días hasta el motín</b> calculados a partir de jornadas consecutivas con moral baja (umbral 45) y la mecha del 14 jornadas á dificultad Almirante. La dificultad modula los plazos (Cabotaje ×0.4, Capitán General ×1.6).",
+    score:90,
+    improv:"Plazos también para tensión de jarcia y rotura de jarcia." },
+  { n:7, es:"Tétrada Elemental", en:"Elemental Tetrad", cat:"Diseñador",
+    desc:"<b>Estética, Mecánica, Historia, Tecnología</b>: ¿están las cuatro presentes? ¿Se refuerzan?",
+    game:"<b>Estética</b> ahora 100% coherente (sprite SVG de línea + numerales romanos + monogramas serif Cinzel — sin emoji que rompa el siglo XV). Historia altísima, Mecánica media, Tecnología single-file elegante.",
+    score:92,
+    improv:"Subir la mecánica con más bucles cortos (cálculo de estima diaria a mano)." },
+  { n:8, es:"Diseño Holográfico", en:"Holographic Design", cat:"Diseñador",
+    desc:"<b>Mirar el juego como un todo</b>: ¿los elementos de las cuatro categorías se sostienen entre sí?",
+    game:"Sí: el shader Gerstner alimenta el cabeceo, que alimenta la dificultad de mantener rumbo, que alimenta la angustia narrativa del Diario.",
+    score:80,
+    improv:"Reforzar el bucle moral-velocidad-decisión (más visible)." },
+  { n:9, es:"Unificación", en:"Unification", cat:"Diseñador",
+    desc:"<b>¿Cuál es el tema del juego?</b> ¿Todos los elementos lo refuerzan?",
+    game:"Tema: <i>cruzar lo desconocido con la técnica del XV</i>. Crew, Diario, instrumentos, magnetismo 1492, y desde la última iteración <b>también la iconografía y la tipografía</b> (numerales romanos, monogramas serif, sprite de grabado) refuerzan unívocamente la ambientación. Cero ruptura visual moderna.",
+    score:96,
+    improv:"Sustituir los textos de UI Tailwind por una tipografía completamente coherente (eliminar las pocas clases Tailwind de utilidad que aún hay)." },
+  { n:10, es:"Resonancia", en:"Resonance", cat:"Diseñador",
+    desc:"<b>¿Qué hay en mi juego que resuene poderosamente conmigo y con quien lo juegue?</b>",
+    game:"Resuena con la curiosidad por lo real: nombres documentados, fechas exactas, palabras del Almirante en castellano del XV. La iconografía actual — sellos en numerales romanos, monogramas en cuño de lacre, líneas de grabado — refuerza la inmersión a nivel preverbal: el jugador siente que está leyendo un manuscrito.",
+    score:98,
+    improv:"Imagen final &laquo;tu travesía vs. la histórica&raquo; con sello cerrando como una carta lacrada." },
+  { n:11, es:"Inspiración Infinita", en:"Infinite Inspiration", cat:"Diseñador",
+    desc:"<b>¿Qué experiencia mía me podría inspirar?</b> ¿Hay algo distinto del videojuego que me dé ideas?",
+    game:"Inspiraciones: Navarrete, las cartas portulanas, el Museo Naval, las reconstrucciones Martínez-Hidalgo, la <i>Lettera Rarissima</i>, el cuadro de Garnelo en el splash.",
+    score:85,
+    improv:"Inspiración de cine náutico (<i>Master &amp; Commander</i>) para curvar la cámara durante eventos." },
+  { n:12, es:"Declaración del Problema", en:"Problem Statement", cat:"Diseñador",
+    desc:"<b>¿Cuál es el problema concreto que estoy resolviendo con este juego?</b> Reformularlo siempre como un problema.",
+    game:"Problema declarado y publicado en el <b>Manifiesto del simulador</b> (modal Help, desplegable): &laquo;¿cómo enseñar la travesía de 1492 con rigor documental y sin sermón?&raquo; — con respuesta, propósito secreto y lo que el simulador NO hace.",
+    score:95,
+    improv:"Imprimirlo en la pantalla de información raíz para máxima visibilidad." },
+  { n:13, es:"Los Ocho Filtros", en:"Eight Filters", cat:"Diseñador",
+    desc:"<b>¿Pasa el diseño los ocho filtros?</b> Sentirse bien · Sorprender · Tener diversión · Tener jugadores · Tecnología viable · Negocio viable · Innovación · Equilibrio.",
+    game:"Pasa 5/8: bien, sorprende, tecnología viable, innovación, equilibrio. Diversión y &laquo;tener jugadores&raquo; — menor (público nicho histórico).",
+    score:60,
+    improv:"Difusión cultural (museos, aulas) para sumar &laquo;tener jugadores&raquo;." },
+  { n:14, es:"Mitigación de Riesgos", en:"Risk Mitigation", cat:"Diseñador",
+    desc:"<b>¿Qué podría arruinar mi juego?</b> ¿Cómo prevenirlo?",
+    game:"Riesgos técnicos cubiertos: caída de APIs externas con fallback silente; localStorage corrupto con try/catch; navegador antiguo con aviso. <b>Riesgos del jugador comunicados á tiempo</b>: cuatro plazos cuantificados (agua, hito, casco, motín) con color de urgencia, pista contextual prioritaria que reconoce 10 estados peligrosos, panel rojo pulsante en temporal severo. La niebla deja al jugador ciego pero la sondaleza sigue dando avisos: el riesgo se conoce, no se ignora.",
+    score:88,
+    improv:"Cachear tiles de cartografía histórica con localStorage para ofline." },
+
+  // ───── Cap 6: Juego, Toy, Player ─────
+  { n:15, es:"El Juguete", en:"The Toy", cat:"Juego",
+    desc:"<b>¿Es divertido jugar con el juguete aunque no haya objetivo?</b> Si añado un objetivo, ¿sigue siéndolo?",
+    game:"Hay «juguete» en mover el timón, izar/arriar velas, alternar vistas cinemáticas, tomar la altura, echar la sondaleza. <b>Tras completar el regreso del I viaje</b>, se desbloquea el <b>modo Capitán Errante</b>: autopilot desactivado, eventos y decisiones omitidos, rumbo libre.",
+    score:88,
+    improv:"En modo libre, soltar los waypoints también de las otras naves para verdadera dispersión." },
+  { n:16, es:"El Jugador", en:"The Player", cat:"Juego",
+    desc:"<b>¿A quién está dirigido el juego?</b> ¿Qué le gusta? ¿Qué espera?",
+    game:"Jugador: adulto curioso interesado en historia, divulgación, navegación. No es público &laquo;casual&raquo;. El simulador asume desktop y respeto por la dificultad léxica. <b>Sistema de metas personales</b>: el jugador escoge hasta tres compromisos propios (piloto magistral, sobrevivir cinco temporales, echar la barrica como Colón, sosegar el motín, senda histórica fiel, casco intacto al I viaje, cartografiar Paria, completar los cuatro viajes) y el motor mide su avance automáticamente. Cada uno con fuente histórica.",
+    score:86,
+    improv:"Versión &laquo;niño&raquo; con glosario y rumbo automatizado (sin perder rigor)." },
+  { n:17, es:"Placer", en:"Pleasure", cat:"Juego",
+    desc:"<b>¿Qué placeres ofrece mi juego?</b> ¿Hay placeres infrarrepresentados?",
+    game:"Asombro, maestría, belleza, descubrimiento, colección + <b>modo Cinemática</b> que cicla automáticamente entre cofa/popa/proa/mar cada 25 s para contemplación pasiva, con HUD oculto opcional. Voces distintivas de tripulantes al seleccionarlos.",
+    score:90,
+    improv:"Música procedural de tonos modales sobre el viento, sin loops obvios." },
+  { n:18, es:"Flujo", en:"Flow", cat:"Juego",
+    desc:"<b>¿Hay objetivos claros?</b> ¿La dificultad permite estar en flujo? ¿Hay distracciones que rompen?",
+    game:"Objetivos claros (panel de próximo hito, timeline visual, metas personales). <b>Tres modos de dificultad</b>: Cabotaje (observador, autopilot total) / Almirante (manual completo) / Capitán General (casco frágil 3×, tormentas más probables). Decisiones modales bien diseñadas; pista contextual desaparece cuando no aporta. <b>Pad armónico sintetizado reactivo al Beaufort</b> envuelve la atención del jugador sin distraerla: tónica La2 con quinta y octava en calma, descenso á 92 Hz con sub-grave en tormenta, modulación lenta por tremolo.",
+    score:88,
+    improv:"Curva visible de dificultad dentro de cada modo (más eventos al avanzar)." },
+  { n:19, es:"Necesidades", en:"Needs", cat:"Juego",
+    desc:"<b>¿Qué necesidades de Maslow cubre mi juego?</b> ¿Hasta qué punto?",
+    game:"Cubre auto-realización (aprendizaje), estima (dominar la nao) y, ahora, <b>pertenencia: viñetas diarias de la tripulación</b>. A velocidades bajas (≤ 1 h/s), al amanecer de cada jornada simulada un tripulante documentado pronuncia una micro-frase contextual con voz adaptada a su edad. 28 viñetas atribuidas a 18 figuras (Colón, Triana, Lope el tonelero, Jácome el grumete genovés…).",
+    score:88,
+    improv:"Viñetas geográficas (al cruzar el trópico, al avistar Sargazos) que reaccionen al lugar exacto." },
+  { n:20, es:"Juicio", en:"Judgment", cat:"Juego",
+    desc:"<b>¿Qué juzga mi juego?</b> ¿Le importa al jugador? ¿Es justo el juicio?",
+    game:"Hull, moral, decisiones. <b>Pantalla final de cada viaje</b> con balance: días reales, sellos obtenidos, decisiones tomadas, integridad del casco al cierre + cita de cierre del Almirante. Sin &laquo;game over&raquo; arbitrario.",
+    score:85,
+    improv:"Permitir comparar el balance de varias partidas guardadas." },
+
+  // ───── Cap 10: Mecánicas ─────
+  { n:21, es:"Espacio Funcional", en:"Functional Space", cat:"Mecánicas",
+    desc:"<b>¿Es el espacio discreto o continuo?</b> ¿Cuántas dimensiones? ¿Hay subespacios?",
+    game:"Espacio continuo (lat/lon WGS84). Subespacios: 2D mapa, 3D escena, 1D timeline. El borde es la esfera terrestre (sin wrap teórico, pero suficiente).",
+    score:90,
+    improv:"Wrap por antimeridiano para travesías hipotéticas del Pacífico." },
+  { n:22, es:"Estado Dinámico", en:"Dynamic State", cat:"Mecánicas",
+    desc:"<b>¿Qué información hay en cada estado?</b> ¿Qué cambia? ¿Quién la ve?",
+    game:"Estado: posición, rumbo, viento, casco, moral, velas, decisiones tomadas, fecha, tormenta activa, jornadas consecutivas con moral baja (contador del motín). Visible casi todo en HUD; sólo permanecen ocultas las probabilidades exactas de los eventos azarosos para preservar la sorpresa histórica.",
+    score:90,
+    improv:"Pequeño panel del &laquo;ánimo del Almirante&raquo; con su Diario reservado vs. el público, mostrando la subestimación del 15 % real." },
+  { n:23, es:"Emergencia", en:"Emergence", cat:"Mecánicas",
+    desc:"<b>¿Qué verbos pueden combinarse?</b> ¿Cuántos objetos los acepta? ¿Qué surge?",
+    game:"Verbos: velas, timón, nave, tripulante, decisión, salvado, astrolabio, cuadrante, sondaleza, corredera, vista cinemática. <b>Viñetas diarias</b> emergentes con frase distinta cada amanecer simulado. <b>Acción de emergencia &laquo;echar la barrica al mar&raquo;</b> aparece sólo durante temporal severidad ≥3 con un panel rojo pulsante y cita literal del 14-II-1493: nace de la combinación tormenta + decisión del jugador. Verbos asíncronos que dialogan con el motor de elevación, el de voz y el de tormentas climatológicas.",
+    score:88,
+    improv:"Verbo opcional «anclar la nave» en costa para descansar." },
+  { n:24, es:"Acción", en:"Acción", cat:"Mecánicas",
+    desc:"<b>¿Cuáles son las acciones operativas?</b> ¿Cuáles las estratégicas? ¿Se obtienen acciones nuevas?",
+    game:"Operativas: timón, velas, <b>astrolabio</b>, <b>cuadrante</b>, <b>sondaleza</b>, <b>corredera</b>. Estratégicas: rumbo, decisiones contrafactuales (con riesgo/recompensa visibles), elección de rol (modula HUD), conmutación de cámara/era cartográfica. <b>El panel «Repertorio del Almirante»</b> en el Manual del Piloto cataloga explícitamente los cinco grandes grupos de verbos (navegación, observación, decisión y bitácora, perspectiva, partida) con atajo asociado para cada uno. Ningún verbo queda oculto al jugador.",
+    score:90,
+    improv:"Acción «echar barrica al mar» en tormenta para preservar el Diario (Colón lo hizo en feb 1493)." },
+  { n:25, es:"Objetivos", en:"Goals", cat:"Mecánicas",
+    desc:"<b>¿Los objetivos son claros?</b> ¿Hay objetivos a corto y largo plazo? ¿El jugador los puede definir?",
+    game:"Objetivo a largo plazo: completar los cuatro viajes. A corto: llegar al próximo hito histórico. <b>Línea de tiempo visual</b> bajo la cabecera dibuja los cuatro viajes (verde I, dorado II, sepia III, granate IV) con periodos de interludio en Castilla rayados, y un marcador dorado pulsante en la fecha simulada actual con tooltip de día. <b>Sistema de metas personales</b>: catálogo de 8 objetivos definibles por el jugador (piloto magistral, sobrevivir 5 temporales, echar la barrica, sosegar el motín, senda histórica fiel, casco intacto al I viaje, cartografiar Paria, completar los 4 viajes) con seguimiento automático y barra de avance. Hasta 3 metas comprometidas en localStorage.",
+    score:92,
+    improv:"Permitir al jugador definir metas libres en texto, no sólo del catálogo." },
+  { n:26, es:"Reglas", en:"Rules", cat:"Mecánicas",
+    desc:"<b>¿Cuáles son las reglas?</b> ¿Hay <i>foundational rules</i>? ¿Reglas de comportamiento? ¿Son enforced?",
+    game:"Reglas implícitas: aparejo redondo no ciñe &lt;67°; corriente afecta SOG; eventos disparan en su fecha real. <b>El Manual del Piloto hace ahora explícito todo el sistema</b>: secciones de Controles, Atajos de teclado, Decisiones del Almirante, Matriz de coordenadas, Instrumentos, Repertorio del Almirante (catálogo de verbos con atajo). La pista contextual emergente recuerda al jugador las reglas operativas en el momento adecuado (no antes). El motor las enforza siempre sin texto cargante.",
+    score:85,
+    improv:"Anexo del manual con derivación matemática de la propulsión (Cl-Cd del aparejo redondo en función del ángulo aparente)." },
+  { n:27, es:"Habilidad", en:"Skill", cat:"Mecánicas",
+    desc:"<b>¿Qué habilidades exige el juego?</b> ¿Físicas, mentales, sociales? ¿Faltan?",
+    game:"Mentales: paciencia, lectura de carta, comprensión de aparejo, cálculo de altura del Sol o de la Polar. <b>Físicas finas</b>: drag de alidada del astrolabio, plomada del cuadrante, lectura de nudos en la corredera de 28 segundos. Sociales: ninguna por diseño. Tres niveles de exigencia (Cabotaje/Almirante/Capitán General) ajustan la fragilidad del casco, la probabilidad de temporal, el consumo de víveres y la velocidad de caída de la moral. <b>El panel «Trayectoria»</b> mide el error medio de las alturas tomadas y otorga distinción explícita (novicio → aprendiz → piloto fiable → piloto magistral).",
+    score:86,
+    improv:"Curva de aprendizaje: corregir automáticamente parte del error cuando la habilidad estimada del jugador es magistral, como hizo Pedro Niño con Bartolomé Roldán." },
+  { n:28, es:"Valor Esperado", en:"Expected Value", cat:"Mecánicas",
+    desc:"<b>¿Cuál es el valor esperado de cada acción?</b> ¿Hay equilibrio?",
+    game:"<b>Cada opción del modal de decisión muestra ahora cuatro etiquetas explícitas</b>: cambio en moral, cambio en casco, riesgo (bajo/medio/alto) y recompensa (bajo/medio/alto). El jugador toma decisiones con el valor esperado a la vista, no a ciegas. Las maniobras (velas, timón) siguen sin valor explícito.",
+    score:80,
+    improv:"Cálculo del valor esperado también para las maniobras (tiempo previsto al hito siguiente)." },
+  { n:29, es:"Azar", en:"Chance", cat:"Mecánicas",
+    desc:"<b>¿Qué papel juega el azar?</b> ¿Se siente justo? ¿Se siente excitante?",
+    game:"<b>12 encuentros oceánicos</b> (aves, cetáceos, sargazos, fuegos de Santelmo, vela latina) modulados por región + <b>6 categorías de temporal climatológico</b> con probabilidades por mes y latitud + <b>8 encuentros documentados con poblaciones nativas</b> disparados al cruzar radio histórico tras la fecha real. El azar se siente justo porque cada evento tiene su fuente y su justificación documental; nunca es arbitrario.",
+    score:88,
+    improv:"Azar acotado en pesca exitosa con tripulante despensero." },
+  { n:30, es:"Equidad / Justicia", en:"Fairness", cat:"Mecánicas",
+    desc:"<b>¿Es justo el juego?</b> ¿Equilibrio simétrico o asimétrico? ¿Una nave domina?",
+    game:"Justicia histórica — la Pinta es más veloz que la Niña, que es más veloz que la Santa María, como en la realidad. El jugador acepta esa asimetría.",
+    score:85,
+    improv:"Equilibrar la &laquo;dificultad de gobierno&raquo; perceptible al cambiar de nave." },
+  { n:31, es:"Desafío", en:"Challenge", cat:"Mecánicas",
+    desc:"<b>¿Qué desafíos enfrenta el jugador?</b> ¿Aumentan en dificultad? ¿Variedad?",
+    game:"Variedad amplísima: <b>13 decisiones del Almirante</b> documentadas a lo largo de los cuatro viajes (avería timón, aguja noruesteando, motín del 10-oct, naufragio Nochebuena, hallazgo de la Navidad destruida, juramento de Cuba como tierra firme, Tierra Firme de Paria, Bobadilla con cadenas, huracán de Santo Domingo 1502, encalladura en Santa Gloria); <b>seis categorías de temporal climatológico</b>; <b>doce encuentros oceánicos</b>. Modo <b>Capitán General</b> escala fragilidad del casco, probabilidad de tormenta, consumo de víveres y caída de moral.",
+    score:90,
+    improv:"Decisiones menores opcionales (escalado por jornada): broma del Caribe, raciones, asignación de guardia, recompensas á la marinería." },
+  { n:32, es:"Decisiones Significativas", en:"Meaningful Choices", cat:"Mecánicas",
+    desc:"<b>¿Las decisiones del jugador importan?</b> ¿Hay &laquo;decisiones dominantes&raquo; mal diseñadas?",
+    game:"<b>13 decisiones contrafactuales mayores</b> con etiquetas de riesgo/recompensa explícitas (avería timón, aguja noruesteando, motín, Nochebuena, hallazgo de la Navidad destruida, juramento de Cuba, Tierra Firme, Bobadilla, huracán 1502, encalladura Jamaica, etc.). <b>Decisión menor implementada</b>: <i>echar la barrica al mar</i> aparece sólo durante temporal severidad ≥3, una vez por viaje, con cita literal del Diario del 14-II-1493 y +5 moral. Voz del Almirante, anotación en Diario y telemetría.",
+    score:88,
+    improv:"Decisión sobre la ración (entera/media) con efecto cuantitativo en el plazo de provisiones." },
+  { n:33, es:"Triangularidad", en:"Triangularity", cat:"Mecánicas",
+    desc:"<b>¿Se equilibra el riesgo bajo con la recompensa baja, y al revés?</b>",
+    game:"Triangularidad explícita: <b>cada opción muestra etiquetas de riesgo y recompensa</b> normalizadas a la decisión (alto/medio/bajo/ninguno) calculadas a partir de los efectos negativos y positivos previsibles. El jugador ve claramente qué opción es arriesgada-alta-recompensa frente a la prudente. <b>Las 13 decisiones cubren los cuatro viajes</b>, no sólo el primero: cada una con tres opciones contrastadas — una histórica, dos contrafactuales razonadas con consecuencias reales (moral, casco, narrativa).",
+    score:86,
+    improv:"Añadir un tercer eje (riesgo histórico vs. legitimidad moral, por ejemplo) — pintar el triángulo gráficamente." },
+  { n:34, es:"Habilidad vs Azar", en:"Skill vs. Chance", cat:"Mecánicas",
+    desc:"<b>¿El equilibrio entre habilidad y azar es el correcto?</b> ¿Aprenden los jugadores?",
+    game:"Predomina la habilidad (alisios, declinación, lectura del astrolabio, decisiones); el azar es un componente menor pero <b>real y documentado</b> con los avistamientos oceánicos. Ahora se siente la diferencia entre días sin nada y días con un encuentro emocionante.",
+    score:80,
+    improv:"Una mecánica de «suerte de marinero» (echar suertes para tomar decisiones menores) sería más historicamente fiel." },
+  { n:35, es:"Cabeza y Manos", en:"Head and Hands", cat:"Mecánicas",
+    desc:"<b>¿El juego es más mental o más físico?</b> ¿Quiero más de uno o de otro?",
+    game:"<b>Cuatro mini-juegos navales interactivos</b>: (1) astrolabio con drag de alidada + objetivo dorado + pista textual; (2) cuadrante (1/4 circulo + plomada con drag); (3) sondaleza con plomada animada y consulta a open-elevation; (4) corredera de nudos con ampolleta de 28s, rope animada y conteo de nudos. Gamepad API para timón/velas.",
+    score:98,
+    improv:"Mini-juego de estima (dead reckoning): trazar el rumbo en la carta y comparar con la posición real." },
+  { n:36, es:"Competición", en:"Competition", cat:"Mecánicas",
+    desc:"<b>¿La competición es justa?</b> ¿Una mezcla de habilidad? ¿Hay público interesado en quién gana?",
+    game:"No hay competición. El simulador es single-player contra la Historia.",
+    score:15,
+    improv:"Modo &laquo;¿llegas antes que la Pinzón&raquo;? (la Pinta de Pinzón llegó a Palos primero, episodio histórico real)." },
+  { n:37, es:"Cooperación", en:"Cooperation", cat:"Mecánicas",
+    desc:"<b>¿Es la cooperación rica en comunicación?</b> ¿Cada jugador aporta algo único?",
+    game:"No hay cooperación (single-player).",
+    score:10,
+    improv:"Modo 2 jugadores red local: uno es Almirante, otro es piloto Pinzón con su carabela." },
+  { n:38, es:"Competición vs Cooperación", en:"Competition vs. Cooperation", cat:"Mecánicas",
+    desc:"<b>¿Necesita ser cooperativo? ¿Competitivo? ¿Una mezcla?</b>",
+    game:"Por diseño, ni una ni otra — es un simulador histórico. La decisión es coherente con el tema.",
+    score:50,
+    improv:"Si se añadiera cooperación, sería en modo cuatro viajes simultáneos (un jugador por nave)." },
+  { n:39, es:"Tiempo", en:"Time", cat:"Mecánicas",
+    desc:"<b>¿El tiempo es suficiente? ¿Demasiado largo?</b> ¿Se siente apurado o sereno?",
+    game:"Tiempo sereno y reactivo: 7 velocidades de 1×1 a 1 año/s. El jugador siempre controla el ritmo.",
+    score:95,
+    improv:"Marcas de &laquo;mediodía solar&raquo; para forzar a parar y mirar el astrolabio." },
+  { n:40, es:"Recompensa", en:"Reward", cat:"Mecánicas",
+    desc:"<b>¿Qué recompensas se dan?</b> ¿Suficientes? ¿Demasiadas? ¿Adecuadas?",
+    game:"<b>18 sellos del Diario</b> verificables con cita literal y persistencia. <b>Pantalla emotiva de cierre al completar cada viaje</b>: una solemne tarjeta de pergamino con cita del Almirante, resumen de Trayectoria de ese viaje, metas personales (cumplidas/pendientes), capitulación personal del jugador. Voz del Almirante recitando la cita histórica. Para el IV viaje el cierre es especial («Fin de la Empresa»). Recompensas progresivas, históricas, no arbitrarias.",
+    score:92,
+    improv:"Sello especial extra al cerrar los cuatro viajes con el casco intacto y todas las decisiones históricas." },
+  { n:41, es:"Castigo", en:"Punishment", cat:"Mecánicas",
+    desc:"<b>¿Por qué castigar al jugador?</b> ¿Es el castigo proporcional? ¿Apropiado?",
+    game:"Castigos mecánicos: <b>el sistema de temporales</b> (6 categorías climatológicas reales con datos del Diario, Las Casas, Hernando Colón) erosiona el casco entre 0,5 % y 18 % por tormenta, daña la moral hasta -20 puntos y modifica viento/dirección durante horas a días simulados. <b>Pestaña «Memoria de los caídos»</b> con muertes documentadas (los 39 del Fuerte de la Navidad, víctimas del huracán de 1502, los Porras, Caonabo, Colón en 1506). El castigo es proporcional, citado y trazable. No se simula la muerte por elecciones del jugador — el peso verdadero se transmite por el registro documental.",
+    score:90,
+    improv:"Ligar la moral baja sostenida con menciones nominales de tripulantes ausentes («ya no se ve al grumete Jácome…»)." },
+  { n:42, es:"Simplicidad / Complejidad", en:"Simplicity/Complexity", cat:"Mecánicas",
+    desc:"<b>¿Qué elementos son innecesariamente complejos?</b> ¿Cuáles son demasiado simples?",
+    game:"HUD denso pero estructurado. <b>Conmutador unificado [Mapa] [Naves] en la cabecera</b> reemplaza los dos botones internos «Mapa a pantalla completa» / «Naves a pantalla completa»: tristate (ambos = partido, uno = solo). Botón «Sin HUD» oculta paneles. Matriz de coordenadas opcional. Cero información duplicada.",
+    score:92,
+    improv:"Preset &laquo;Aula&raquo; con HUD intermedio para enseñanza." },
+  { n:43, es:"Elegancia", en:"Elegance", cat:"Mecánicas",
+    desc:"<b>¿Cuántos propósitos tiene cada elemento?</b> Lo elegante hace mucho con poco.",
+    game:"Muy elegante: las velas afectan velocidad, ángulo, esfuerzo en jarcia y curvatura visual. El timón afecta rumbo, abatimiento y consumo de tiempo. El nuevo conmutador <i>[Mapa] [Naves]</i> hace tres funciones (split, mapa-solo, naves-solo) con dos botones. Un único fichero HTML.",
+    score:95,
+    improv:"Pulir: el botón &laquo;Sincronizar&raquo; podría además reanudar la sim si está pausada." },
+  { n:44, es:"Carácter / Personalidad", en:"Character", cat:"Mecánicas",
+    desc:"<b>¿Qué características hacen este juego único?</b>",
+    game:"Personalidad muy marcada: pergamino, latín náutico, citas textuales del Diario, voz del Almirante en el manual y desde la nueva iteración un <b>lenguaje visual íntegramente serio</b> — nada que delate la pantalla moderna (cero emoji), grabado de línea, numerales romanos, monogramas como cuños de lacre. Estética irrepetible.",
+    score:98,
+    improv:"Marca de agua tipográfica en la esquina inferior izquierda con un fragmento de letra capitular." },
+  { n:45, es:"Imaginación", en:"Imagination", cat:"Mecánicas",
+    desc:"<b>¿Qué debe imaginar el jugador?</b> ¿Cuánto le doy y cuánto le dejo crear?",
+    game:"Doy mucho (mapa, modelo 3D, sonido) pero dejo respirar: las olas del Atlántico desierto, las dudas de la marinería, el desembarco, los rostros del Diario. Descripciones evocadoras de los temporales (cabrillas en la mar, calor opresivo, palo mayor que cruje) <i>sin imagen</i>: el jugador imagina el huracán por el texto y el viento súbito, no por un VFX. <b>Encuentros con poblaciones nativas</b> entregados sólo como cita literal del Diario o Las Casas — el jugador imagina los rostros, los gestos, los regalos, los combates. Las metas personales son ganchos para que el jugador se imagine á sí mismo como el Almirante en momentos concretos del relato.",
+    score:90,
+    improv:"Vista cinematográfica de mar gruesa cuando estalla un huracán." },
+  { n:46, es:"Economía", en:"Economy", cat:"Mecánicas",
+    desc:"<b>¿Qué economía hay?</b> ¿Cómo se acumulan recursos? ¿Cómo se gastan?",
+    game:"<b>Panel de Bodega</b> en &laquo;Vida a bordo&raquo; con barras por categoría: bizcocho (95 d), agua dulce (70 d), vino tinto (80 d), carne salada (60 d), tocino y queso (75 d), garbanzo/lenteja (85 d). Cada provisión decrece a su ritmo histórico (Morison, Las Casas). Color rojo cuando &lt;20%.",
+    score:85,
+    improv:"Comerciar provisiones con los taínos en La Española (algodón, batata)." },
+  { n:47, es:"Equilibrio / Balance", en:"Balance", cat:"Mecánicas",
+    desc:"<b>¿Está bien equilibrado?</b> Doce tipos de balance (justicia, dificultad, simbolismo, libertad/control, simple/complejo...).",
+    game:"Equilibrio de dificultad ahora plurifacético: el selector Cabotaje/Almirante/Capitán-General modula <b>cuatro subsistemas en cascada</b> — fragilidad del casco (×0,4 / ×1 / ×2,6), probabilidad de temporal (×0,35 / ×1 / ×1,6), consumo de víveres (×0,75 / ×1 / ×1,35) y velocidad de caída de la moral con escasez (×0,35 / ×1 / ×2). Equilibrio recompensa/castigo: cada lectura magistral premia +1,5 moral; cada tormenta superada acumula en la Trayectoria. Equilibrio libertad/control: modo Capitán Errante se desbloquea con sello, no antes.",
+    score:86,
+    improv:"Iterar tras playtest con 5 historiadores y 5 no-historiadores." },
+  { n:48, es:"Accesibilidad", en:"Accessibility", cat:"Mecánicas",
+    desc:"<b>¿Cómo va a saber el jugador qué hacer?</b> ¿Es intuitivo? ¿Hay barreras?",
+    game:"<b>Tutorial guiado de primera vez</b> con prev/next/skip y localStorage. Help modal exhaustivo. Glosario hover sobre todos los términos náuticos. <b>Nuevo conmutador [Mapa] [Naves]</b> en la cabecera resuelve el control de layout (antes confuso: dos botones internos diferentes con texto largo). Botón Diario reubicado abajo-derecha para no tapar la barra de vistas.",
+    score:92,
+    improv:"Versión simplificada del HUD para sesiones contemplativas y aulas." },
+  { n:49, es:"Progreso Visible", en:"Visible Progress", cat:"Mecánicas",
+    desc:"<b>¿El jugador puede ver su progreso?</b> ¿En qué dimensiones?",
+    game:"Línea de ruta en mapa + fecha simulada + <b>panel de Sellos del Diario</b> (X de 18 cumplidos) con animación pop + <b>singladura del día</b> comparada con la media histórica + rango textual (Aspirante → Almirante de la Mar Océana).",
+    score:92,
+    improv:"Cronología visual horizontal con todos los hitos del viaje en curso." },
+  { n:50, es:"Paralelismo", en:"Parallelism", cat:"Mecánicas",
+    desc:"<b>¿Puede el jugador hacer varias cosas al tiempo? ¿Reducirías la frustración?</b>",
+    game:"Sí, total: durante la travesía el jugador puede consultar el mapa, ajustar velas, leer el Diario, contemplar las naves y abrir cualquier instrumento <b>con un solo tecleo sin pausar la sim</b>: A astrolabio, Q cuadrante, L sondaleza, C corredera, T Trayectoria. Pequeñas teclas flotantes indican cada atajo en su instrumento. La pantalla del juego nunca exige cambiar de modo para medir.",
+    score:92,
+    improv:"Combinaciones de teclas en gamepad para los cuatro instrumentos (DPad)." },
+
+  // ───── Cap 12: Puzzles ─────
+  { n:51, es:"La Pirámide", en:"The Pyramid", cat:"Puzzles",
+    desc:"<b>¿Hay un gran objetivo que organice todos los demás? ¿Tiene la fuerza?</b>",
+    game:"Pirámide clara: <i>completar los cuatro viajes con fidelidad histórica</i>. Sub-objetivos: cada viaje, cada hito. <b>La línea de tiempo visual bajo la cabecera</b> dibuja explícitamente esa pirámide: cuatro segmentos coloreados (I verde, II dorado, III sepia, IV granate) separados por interludios en Castilla, con un marcador que se mueve a través de los doce años (1492-1504). La macro-estructura es ahora visible de un vistazo; cada partida se ubica espacialmente en ella.",
+    score:90,
+    improv:"Subdividir los viajes en hitos navegables: clic en el segmento centra el mapa en su ruta." },
+  { n:52, es:"El Puzzle", en:"The Puzzle", cat:"Puzzles",
+    desc:"<b>¿Hay puzzles?</b> ¿Cumplen los 10 principios de los buenos puzzles?",
+    game:"Puzzles implícitos (velas vs. viento) + <b>cuatro puzzles náuticos interactivos</b> con dificultad creciente: astrolabio (encontrar la altura del Sol/Polar), cuadrante (alineación con plomada), sondaleza (lectura de profundidad con consulta real), corredera (medición de velocidad por nudos en 28s). Cada uno con meta clara, progreso visible y aprendizaje histórico.",
+    score:94,
+    improv:"Variante avanzada sin marcador objetivo para los puzzles de altura." },
+
+  // ───── Cap 13: Interface ─────
+  { n:53, es:"Control", en:"Control", cat:"Interfaz",
+    desc:"<b>¿Cuándo el jugador siente que tiene control?</b> ¿Cuándo no?",
+    game:"Control absoluto del tiempo, mediano del timón, total de la cámara. Layout del viewport <b>directo y predecible</b> con dos toggles [Mapa] [Naves] de tristate evidente. La sensación de control es buena en todo momento.",
+    score:88,
+    improv:"Indicar visualmente cuándo el timón está &laquo;trabado&raquo; por marea o calma." },
+  { n:54, es:"Interfaz Física", en:"Physical Interface", cat:"Interfaz",
+    desc:"<b>¿El jugador toca físicamente algo? ¿Sería mejor si tocara otra cosa?</b>",
+    game:"Teclado + ratón + <b>Gamepad API</b>: cualquier mando estándar (Xbox/PlayStation/genérico) se conecta automáticamente — stick izquierdo = timón con deadzone 0.18, RT/LT = izar/arriar velas, A = pausa, X/Y = paso de velocidad, Start = sincronizar histórico. Toast informativo al conectar.",
+    score:88,
+    improv:"Asignación del stick derecho á la cámara cuando se está en modo vista libre." },
+  { n:55, es:"Interfaz Virtual", en:"Virtual Interface", cat:"Interfaz",
+    desc:"<b>¿La interfaz virtual transmite con eficacia la información del mundo?</b>",
+    game:"HUD denso pero estructurado y <b>sin solapes</b> (tras la reorg: columna derecha desplazada 42 px para no quedar bajo la barra de vistas; botón Diario reubicado). Matriz de coordenadas brillante (4 lecturas a la vez). Iconografía SVG coherente con el grabado de portulano.",
+    score:92,
+    improv:"Tooltips sobre cada panel para los principiantes." },
+  { n:56, es:"Transparencia", en:"Transparency", cat:"Interfaz",
+    desc:"<b>¿La interfaz es invisible o llama la atención?</b> Lo ideal es que no se note.",
+    game:"Pergamino no estorba. Botón <i>Sin HUD</i> oculta todos los paneles. Modo Crónica combinable: HUD oculto + vistas alternándose = simulador como película. <b>Nada del HUD lleva ya iconos emoji que rompan la ilusión de época</b>: todo es grabado SVG o tipografía serif.",
+    score:94,
+    improv:"Fundido sutil de la barra de cámaras pasados 10 s sin interacción." },
+  { n:57, es:"Retroalimentación", en:"Feedback", cat:"Interfaz",
+    desc:"<b>¿Qué información necesita el jugador?</b> ¿Cuándo? ¿Hay retroalimentación inmediata? ¿Resonante?",
+    game:"Numérico, visual, auditivo, narrativo, histórico. Añadida la <b>singladura comparada</b>: la distancia recorrida hoy se valora contra la media documentada de Colón (35-45 leguas/día en alisios).",
+    score:92,
+    improv:"Cuando termina un viaje, comparar el tiempo total con el del Almirante histórico." },
+  { n:58, es:"Jugosidad", en:"Juiciness", cat:"Interfaz",
+    desc:"<b>¿La interfaz es &laquo;jugosa&raquo;?</b> ¿Premia la pequeña interacción?",
+    game:"Olas Gerstner, sombras de jarcia, banderas, espuma, campanas, animación pop al desbloquear sello (numeral romano «estampado»), monogramas serif tipo cuño de lacre al cambiar de tripulante. <b>Marcador dorado pulsante</b> en la timeline; <b>panel rojo pulsante de emergencia</b> durante temporal; <b>pad armónico sintetizado</b> con tres voces (tónica + quinta + octava) y delay-feedback como pseudo-reverberación, reactivo al Beaufort en gain y frecuencia. La interfaz responde a cada cambio del mundo con un latido propio.",
+    score:90,
+    improv:"Sonido sutil de cuño-lacre al desbloquear un sello." },
+  { n:59, es:"Canales y Dimensiones", en:"Channels and Dimensions", cat:"Interfaz",
+    desc:"<b>¿Qué información se mueve entre jugador y juego?</b> ¿En qué canales? ¿Cuáles dimensiones?",
+    game:"Canales: visión (mapa, 3D, HUD, modal, <b>timeline cronológica visible permanentemente bajo la cabecera</b>, <b>pista contextual emergente</b>, <b>panel rojo pulsante de emergencia</b>), oído (campanas, viento, voces de la marinería con edad/oficio adaptado), tacto (teclas, ratón, gamepad). Cuatro dimensiones: tiempo (timeline + reloj abordo), espacio (mapa + 3D), estado (telemetría + bodega), persona (rol + tripulación).",
+    score:88,
+    improv:"Canal háptico opcional (vibración de gamepad al disparo de evento)." },
+  { n:60, es:"Modos", en:"Modes", cat:"Interfaz",
+    desc:"<b>¿Qué modos tiene el juego?</b> ¿Son necesarios? ¿Claramente diferenciados?",
+    game:"Modos: split, mapa-fullscreen, naves-fullscreen, decisión (modal). Cámara: libre / cofa / popa / proa / mar.",
+    score:80,
+    improv:"Modo &laquo;clase&raquo;: presentación automática para aula con narración." },
+
+  // ───── Cap 14: Curva de Interés ─────
+  { n:61, es:"Curva de Interés", en:"Interest Curve", cat:"Interés",
+    desc:"<b>¿La curva de interés tiene la forma correcta?</b> Pico inicial, valles, picos cada vez mayores, clímax.",
+    game:"La estructura del Diario lo da hecho: zarpa → avería → alisios → motín → ¡tierra! → naufragio. <b>Picos auxiliares en valles</b>: 10 viñetas evocadoras (mar fosforescente, madero labrado flotando, sueño de un grumete con la isla de Antillia, luz nocturna como candela, calma de muerte, luna grande, Salve á dos voces, viento que rola, conferencia Pinzón-Colón, rosa de los vientos en cubierta) se disparan cuando llevamos 5+ días en mar abierta sin evento. Cada una con fuente histórica. <b>Pantalla emotiva de cierre de viaje</b> da el clímax de cada arco.",
+    score:92,
+    improv:"Modular el ritmo de las viñetas por proximidad á los hitos venideros." },
+  { n:62, es:"Interés Inherente", en:"Inherent Interest", cat:"Interés",
+    desc:"<b>¿Qué hace el contenido inherentemente interesante?</b> ¿Tiene drama, peligro, intimidad, fantasía?",
+    game:"Drama (motín), peligro (tormentas), intimidad (rezos diarios), fantasía (descubrimiento). Muy alto.",
+    score:90,
+    improv:"Más intimidad — diario personal del Almirante y de un grumete." },
+  { n:63, es:"Belleza", en:"Beauty", cat:"Interés",
+    desc:"<b>¿Cómo elevar el juego a una experiencia trascendentalmente bella?</b>",
+    game:"Belleza visual (mar Gerstner, cielo ACES Filmic, cartas portulanas, sprite SVG de línea), tipográfica (UnifrakturCook, Cinzel, IM Fell English), auditiva (campanas de ampolleta). Tras desemojizar, <b>no hay un solo elemento gráfico fuera del registro estético del XV</b>.",
+    score:95,
+    improv:"Banda sonora ambiental opcional con cantos de marinería del XVI." },
+  { n:64, es:"Proyección", en:"Projection", cat:"Interés",
+    desc:"<b>¿El jugador puede proyectarse en el mundo del juego?</b>",
+    game:"El rol de Almirante / Piloto / Vigía proyecta al jugador en distintos puestos. <b>El astrolabio interactivo dibuja las manos del avatar</b> que lo sostienen — manos curvas con dedos rodeando el aro y mangas del jubón. Refuerza visualmente que es el jugador-Almirante quien toma la lectura.",
+    score:88,
+    improv:"Manos similares en la sondaleza al echar la plomada y en el cuadrante." },
+  { n:65, es:"La Máquina de Historias", en:"Story Machine", cat:"Interés",
+    desc:"<b>¿El sistema genera historias propias del jugador?</b>",
+    game:"Decisiones contrafactuales + pantalla final de cada viaje generada + <b>botón «Exportar mi bitácora»</b> (en el manual) que descarga un <code>.md</code> personalizado con posición, sellos obtenidos, hitos pendientes, decisiones tomadas y una glosa de cierre adaptada al porcentaje completado.",
+    score:88,
+    improv:"Generar también un PDF con el cuadro de Garnelo como portada." },
+
+  // ───── Cap 15: Story ─────
+  { n:66, es:"El Obstáculo", en:"The Obstacle", cat:"Historia",
+    desc:"<b>¿Cuáles son los obstáculos entre el héroe y el objetivo?</b>",
+    game:"Obstáculos mayores: mar oceánica, motín (con plazo cuantificado), naufragio, tormenta deshecha, huracán de las Indias, Bobadilla. Obstáculos secundarios: calmas chichas, borrascas tropicales, galernas, <b>niebla espesa</b> (suprime avistamientos oceánicos y agrava riesgo de encalladura cerca de costa, con cita climatológica del banco de Terranova y Las Casas II.13). Cada obstáculo documentado.",
+    score:90,
+    improv:"Enfermedad (escorbuto en el IV viaje) como obstáculo gradual." },
+  { n:67, es:"Simplicidad y Trascendencia", en:"Simplicity and Transcendence", cat:"Historia",
+    desc:"<b>¿Reglas simples que llevan a experiencias trascendentes?</b>",
+    game:"Reglas relativamente simples (físicas estándar, eventos por fecha) que llevan a la trascendencia del descubrimiento.",
+    score:80,
+    improv:"Reducir aún más el número de paneles iniciales visibles." },
+  { n:68, es:"El Viaje del Héroe", en:"Hero's Journey", cat:"Historia",
+    desc:"<b>¿Sigue tu historia el monomito? Llamada · Cruce del umbral · Pruebas · Recompensa · Regreso.</b>",
+    game:"Sí, casi por accidente histórico. Llamada (Capitulaciones de Santa Fe), cruce (Canarias), pruebas (motín, tormenta, huracán), recompensa (Guanahaní y los descubrimientos), regreso (Palos / Cádiz / Sanlúcar). <b>El regreso queda ahora explícito</b>: pantalla emotiva de cierre al final de cada viaje con cita literal del Almirante, resumen de Trayectoria personal, metas del jugador y voz histórica. El IV viaje recibe un cierre especial («Fin de la Empresa») con la cita de la Lettera Rarissima.",
+    score:92,
+    improv:"Sub-cierres dentro de cada viaje (las cinco etapas del monomito explícitas también á escala intra-viaje)." },
+  { n:69, es:"La Cosa Más Extraña", en:"Weirdest Thing", cat:"Historia",
+    desc:"<b>¿Qué es lo más raro de tu mundo?</b> Suele ser lo que el público recuerda.",
+    game:"La <i>aguja noruesteando</i> (declinación magnética descubierta en mitad del Atlántico el 13 sept 1492) ahora tiene tratamiento dedicado: al cruzar la fecha la <b>aguja del compás del HUD se desvía visualmente</b> con animación CSS (8 s, oscilación NW hasta −15°, halo dorado), toast con la cita literal del Diario y narración hablada por la voz grave del Almirante: «Las agujas noruestean. Nadie había observado tal cosa».",
+    score:90,
+    improv:"Una explicación geomagnética breve al hacer hover sobre la aguja durante la anomalía." },
+  { n:70, es:"Historia", en:"Story", cat:"Historia",
+    desc:"<b>¿Cuál es tu historia?</b> ¿Es la mejor que puedes contar?",
+    game:"La Historia (con mayúscula) es <i>la historia</i> del juego. Trama: 1492-1504 documentada. Imposible mejorar por mejor narrador.",
+    score:95,
+    improv:"Voz en off opcional con un actor leyendo entradas del Diario." },
+  { n:71, es:"Libertad", en:"Freedom", cat:"Historia",
+    desc:"<b>¿Cuándo siente el jugador libertad?</b> ¿Cuándo siente que no la tiene?",
+    game:"Libertad de cámara (5 vistas + Crónica + sin HUD), de tiempo (7 velocidades), de timón y velas, de HUD (visible/oculto), de elección en decisiones contrafactuales. <b>Modo Capitán Errante</b> tras completar el I viaje: la línea histórica deja de imponerse y el jugador toma cualquier rumbo, sin eventos automáticos. Restringida sólo en las fechas <i>previas</i> al desbloqueo.",
+    score:92,
+    improv:"Modo Capitán Errante con eventos opcionales (avistamientos pero no decisiones)." },
+  { n:72, es:"Control Indirecto", en:"Indirect Control", cat:"Historia",
+    desc:"<b>¿Cómo guiar al jugador sin forzarlo?</b> Restricciones, objetivos, interfaz, diseño visual, personajes, música.",
+    game:"Restricciones (waypoints), objetivos (próximo hito), diseño visual (la ruta histórica visible), y una nueva <b>pista contextual de próxima singladura</b>: una píldora discreta en la esquina inferior izquierda que reconoce diez situaciones y sugiere la acción adecuada en cada una — temporal activo, casco crítico, moral baja, Sol al meridiano (azimut), Polar visible, tierra cerca por el relieve cargado, vela mal aprovechada, provisiones bajas, corredera nunca echada, recién embarcado. Prioriza por urgencia (10 → 1) y se silencia con un clic; reaparece tras 4 min ó evento mayor. Guía sin imponer.",
+    score:88,
+    improv:"Música sutil que cambie con el viento (Beaufort) — guía emocional. Adaptar la pista al rol seleccionado." },
+  { n:73, es:"Colusión", en:"Collusion", cat:"Historia",
+    desc:"<b>¿Cómo logras que el jugador colabore con la historia que cuentas?</b>",
+    game:"El jugador, por curiosidad histórica, coludes con la veracidad. La interfaz pacta con él: si quieres saber qué hizo Colón, escoge la opción rotulada como histórica. <b>La música</b> ayuda: drone tónico sereno en calma, descenso á registro grave en temporal — refuerza emocionalmente la narrativa sin necesitar texto. <b>Los encuentros con nativos</b> se disparan al cruzar el radio histórico real (Guanahaní, Bohío, Samaná, Paria, Guanaja) — el jugador siente que está reviviendo la senda, no eligiéndola.",
+    score:88,
+    improv:"Botón &laquo;¿qué hizo Colón realmente?&raquo; en cada decisión cancelada." },
+
+  // ───── Cap 17: World ─────
+  { n:74, es:"El Mundo", en:"The World", cat:"Mundo",
+    desc:"<b>¿Cuál es la naturaleza del mundo de tu juego?</b> Físico, social, mental.",
+    game:"Mundo físico real (Atlántico, Caribe, Iberia) con física plausible. Mundo social cerrado (la nao). Mundo mental: cosmovisión del XV.",
+    score:90,
+    improv:"Notas culturales sobre las creencias del XV (la mar tenebrosa, los antípodas)." },
+
+  // ───── Cap 18-19: Characters ─────
+  { n:75, es:"El Avatar", en:"The Avatar", cat:"Personajes",
+    desc:"<b>¿Cómo se proyecta el jugador en el avatar?</b> Cuerpo idealizado, personalidad, narrativa.",
+    game:"Monograma serif en cuño de lacre por oficio (A, P, M, T, V, S, G…). Cambia al seleccionar tripulante. <b>Voz sintetizada local adaptada a edad y cargo</b>: pitch 1.30 + rate 1.05 para grumetes de 13 años (Hernando Colón, Jácome el Rico); pitch 0.82 + rate 0.88 para Almirante / Pinzón / Buil. El jugador <i>oye</i> al tripulante pronunciar su cita.",
+    score:90,
+    improv:"Retrato a tinta sobre pergamino reemplazando el monograma." },
+  { n:76, es:"Función del Personaje", en:"Character Function", cat:"Personajes",
+    desc:"<b>¿Qué función cumple cada personaje en la historia y en la mecánica?</b>",
+    game:"Cada tripulante con función documentada y voz histórica + <b>HUD reactivo al oficio elegido</b>: el rol activa un foco que destaca paneles relevantes y atenúa los demás (navegación → matriz coordenadas + próximo hito; bodega → vida a bordo; sanidad → moral; taller → velas y casco; vigía → próximo hito y mar). El Almirante / Capitán ve todo.",
+    score:92,
+    improv:"Que el rol además modifique acciones disponibles (Vigía con tecla rápida de avistamiento, etc.)." },
+  { n:77, es:"Rasgos del Personaje", en:"Character Traits", cat:"Personajes",
+    desc:"<b>¿Qué rasgos hacen únicos a los personajes?</b>",
+    game:"Bio documentada de 60+ tripulantes + frase distintiva al seleccionar (33 voces con atribución y fuente). Desde la nueva iteración: <b>el rasgo se oye</b> — la voz sintetizada modula tono y velocidad según edad documentada (CREW_AGES) y oficio. Un grumete suena agudo y rápido; el Almirante grave y pausado.",
+    score:95,
+    improv:"Voz hablada también para Anacaona, Hatuey y Quibián en «La otra orilla»." },
+  { n:78, es:"Circumplejo Interpersonal", en:"Interpersonal Circumplex", cat:"Personajes",
+    desc:"<b>¿Cubres todas las cuadrantes (dominante/sumiso, hostil/amigable) en tus personajes?</b>",
+    game:"<b>37 figuras etiquetadas</b> con su cuadrante en el modelo de Schell (CREW_CIRCUMPLEX): Dominante-amistoso (Colón, Vicente Pinzón, Cosa, Anacaona…), Dominante-hostil (Martín Pinzón, Chachu, Bobadilla, Caonabo, Hatuey…), Sumiso-amistoso (los Niño, Lope, Jácome, Guacanagarí, Hernando…), Sumiso-hostil (Quintero, Triana, Sarmiento, Cuneo…). Cada ficha lleva badge coloreado y la pestaña Tripulación abre con leyenda del modelo.",
+    score:92,
+    improv:"Diagrama de dispersión 2D del circumplejo (no sólo cuadrantes), con tooltips al pasar el ratón." },
+  { n:79, es:"La Red de Personajes", en:"Character Web", cat:"Personajes",
+    desc:"<b>¿Las relaciones entre personajes generan interés?</b>",
+    game:"Red rica documentada + <b>diagrama SVG navegable</b> en una nueva pestaña «Red de personajes» del modal de información. 17 nodos clave (Colón, Pinzón, Niño, Cosa, Triana, Bobadilla, Buil, Ojeda, Guacanagarí, Caonabo, Anacaona…) con líneas tipificadas: hermandad/familia, paternidad, mando, enemistad, rivalidad ambivalente, alianza, matrimonio. Leyenda explícita.",
+    score:90,
+    improv:"Permitir filtrar las relaciones por viaje (I/II/III/IV) para ver cómo cambia la red en el tiempo." },
+  { n:80, es:"Estatus", en:"Status", cat:"Personajes",
+    desc:"<b>¿Hay claras señales de estatus?</b> ¿Cómo asciende o cae el jugador?",
+    game:"Rango textual derivado del número de sellos: Aspirante → Grumete → Marinero → Piloto → Maestre → Capitán → Almirante → Almirante de la Mar Océana. <b>Al cruzar un umbral</b>, toast destacado con cita histórica del nuevo rango y <b>narración hablada por la voz grave del Almirante</b> (pitch 0.82, rate 0.88).",
+    score:92,
+    improv:"Pequeña ceremonia visual de ascenso (sello pulsante + zoom de cámara)." },
+  { n:81, es:"Transformación del Personaje", en:"Character Transformation", cat:"Personajes",
+    desc:"<b>¿Cómo cambia el personaje?</b> ¿El cambio es creíble y cautivador?",
+    game:"<b>Nueva pestaña «Trayectoria del Almirante»</b> en el modal de información: catorce momentos documentados con cita literal y código de color por tono (júbilo, esperanza, triunfo, tensión, sombra, asombro, resistencia, resignación, final). El cambio de la voz de Colón de 1492 á 1506 queda visible en una sola pantalla.",
+    score:90,
+    improv:"Animar el avatar (envejecimiento de los rasgos con cada viaje)." },
+  { n:82, es:"Contradicción Interna", en:"Inner Contradiction", cat:"Personajes",
+    desc:"<b>¿Tienen los personajes contradicciones internas que los hagan fascinantes?</b>",
+    game:"Colón mismo es contradicción (genovés-castellano, devoto-codicioso, científico-místico). <b>Microcita de la contradicción al seleccionar el rol</b>: 12 personajes con contradicción documentada (Almirante, los dos Pinzones, Juan de la Cosa, Luis de Torres converso, Triana sin pensión, Guacanagarí acusado, Hernando bibliófilo, Bartolomé extranjero, Pedro Niño leal y pariente de Pinzón, Diego de Arana en La Navidad, maestre Juan con los maderos de la nao). Cada uno con fuente histórica al pie. <b>Las tormentas climatológicas</b> la encarnan en mecánica: tensión entre seguir la derrota dibujada y huir del huracán. El paradigma del 29-VI-1502 (Colón salvó sus cuatro naves desobedeciendo á Ovando).",
+    score:92,
+    improv:"Al cerrar la travesía mostrar qué fracción de tu Trayectoria es histórica vs. contrafactual." },
+  { n:83, es:"La Cualidad Sin Nombre", en:"Nameless Quality", cat:"Personajes",
+    desc:"<b>¿Hay esa cualidad inefable que hace al mundo &laquo;estar vivo&raquo;?</b>",
+    game:"Cuando todo encaja: las campanas de la ampolleta, el oleaje Gerstner, la sombra de la jarcia, el texto del Diario, el sello de lacre del rol activo, el numeral romano de un hito recién desbloqueado, la barra de bodega gastándose. Coherencia estética sin un solo elemento moderno que rompa el conjuro.",
+    score:88,
+    improv:"Pulir transiciones día/noche y ocaso para reforzar la sensación de mundo vivo." },
+
+  // ───── Cap 21: Multiplayer ─────
+  { n:84, es:"Amistad", en:"Friendship", cat:"Multijugador",
+    desc:"<b>¿El juego facilita amistades?</b>",
+    game:"N/A: simulador solitario por diseño.",
+    score:10,
+    improv:"Eventual modo asíncrono — comparar travesías con un amigo (export-import save)." },
+  { n:85, es:"Expresión", en:"Expression", cat:"Multijugador",
+    desc:"<b>¿Cómo se expresa el jugador a sí mismo? ¿Apariencia, nombre, decisiones, libertad?</b>",
+    game:"<b>Capitulación personal del jugador</b>: modal en pergamino al iniciar la partida (encadenado tras el tutorial) donde el jugador escribe — al estilo de las Capitulaciones de Santa Fe — lo que él busca en este viaje. Persiste en localStorage, se imprime en la bitácora exportable como cita propia y se puede editar desde el manual. Nombre del salvado, decisiones tomadas y rumbo personal también cuentan.",
+    score:85,
+    improv:"Editor enriquecido con plantilla de redacción XV para quien no sepa por dónde empezar." },
+  { n:86, es:"Comunidad", en:"Community", cat:"Multijugador",
+    desc:"<b>¿Cómo construyes comunidad alrededor del juego?</b>",
+    game:"N/A: proyecto pre-comunidad. README abierto, código fuente legible, fuentes citadas.",
+    score:20,
+    improv:"Página en GitHub con foro de mejoras históricas (Discussions)." },
+  { n:87, es:"Griefing", en:"Griefing", cat:"Multijugador",
+    desc:"<b>¿Hay riesgo de que unos jugadores arruinen la experiencia de otros?</b>",
+    game:"N/A: no hay otros jugadores.",
+    score:100,
+    improv:"Nada que hacer." },
+  { n:88, es:"Amor", en:"Love", cat:"Multijugador",
+    desc:"<b>¿Tu juego inspira amor (a él, a su mundo, entre jugadores)?</b>",
+    game:"Inspira amor á la Historia, á la mar y al texto del Diario. La <b>pantalla emotiva de cierre de viaje</b> consagra el cariño: tras cada arco, el Almirante recita en su propia voz una cita literal de su pluma, junto al resumen de tu travesía y á tu Capitulación personal. Para el IV viaje el cierre cita la <i>Lettera Rarissima</i> desde Jamaica y recuerda la muerte de la Reina y del Almirante.",
+    score:88,
+    improv:"Capa multijugador local (compartir bitácoras exportadas con amigos) seguiría siendo opcional, no central." },
+
+  // ───── Cap 22-23: Equipo y Documentación ─────
+  { n:89, es:"El Equipo", en:"The Team", cat:"Equipo",
+    desc:"<b>¿El equipo trabaja al servicio de la experiencia que se quiere crear?</b>",
+    game:"N/A: proyecto individual (con IA asistencial). La cohesión es trivialmente alta.",
+    score:90,
+    improv:"Documentar el rol de la IA (Claude) en el README de transparencia." },
+  { n:90, es:"Documentación", en:"Documentation", cat:"Equipo",
+    desc:"<b>¿Hay documentos de diseño que ayuden al equipo a recordar y comunicar las decisiones?</b>",
+    game:"Existen <code>specs/specs.txt</code>, <code>CLAUDE.md</code>, README, <code>LensAudit.html</code> (este). Sólido.",
+    score:85,
+    improv:"Añadir changelog y devlog narrativo." },
+
+  // ───── Cap 24-25: Playtesting y Tecnología ─────
+  { n:91, es:"Playtesting", en:"Playtesting", cat:"Pruebas",
+    desc:"<b>¿Has playtesteado? ¿Has hecho las preguntas adecuadas?</b>",
+    game:"Playtesting informal con el usuario (iteración rápida sobre detecciones de bug). <b>Telemetría de auto-playtesting</b>: el panel «Trayectoria del Almirante» registra tiempo al timón manual, número de tomas con cada instrumento, error medio de altura, avistamientos oceánicos, temporales sobrevividos, motines superados y fidelidad a la senda histórica. Exportable a JSON. Permite al diseñador analizar partidas reales sin grabaciones de pantalla.",
+    score:70,
+    improv:"Sesiones grabadas con 5 jugadores (3 historiadores, 2 noveles) y entrevistas, contrastadas con los JSON de telemetría exportados por los testers." },
+  { n:92, es:"Tecnología", en:"Technology", cat:"Tecnología",
+    desc:"<b>¿La tecnología elegida es la correcta?</b> Foundational vs. decorational.",
+    game:"HTML + Three.js + Leaflet por CDN: foundational excelente (sin instalación, multiplataforma).",
+    score:90,
+    improv:"Migrar Three.js a versión moderna (0.16x) cuando lo necesite el shader." },
+  { n:93, es:"La Bola de Cristal", en:"Crystal Ball", cat:"Tecnología",
+    desc:"<b>¿Cómo será tu juego en 5 años?</b>",
+    game:"Tecnología WebGL2 / WebGPU; APIs históricas más ricas; voz por TTS. Apuesta razonable para sobrevivir 5 años.",
+    score:75,
+    improv:"Plan de migración a WebGPU cuando sea estándar." },
+
+  // ───── Cap 26-28: Negocio ─────
+  { n:94, es:"El Cliente", en:"The Client", cat:"Negocio",
+    desc:"<b>¿Quién es tu cliente y qué quiere realmente?</b>",
+    game:"El cliente es el usuario didáctico-aficionado. Quiere rigor, belleza y aprender. El simulador lo entrega.",
+    score:80,
+    improv:"Entrevista a 3 educadores y 3 historiadores antes de cerrar v1.0." },
+  { n:95, es:"La Presentación / Pitch", en:"The Pitch", cat:"Negocio",
+    desc:"<b>¿Tu pitch es convincente?</b> Twelve tips: confianza, brevedad, lenguaje del cliente, ilustración...",
+    game:"N/A directo (no se vende). Pitch implícito en README y splash: convincente.",
+    score:75,
+    improv:"Video-tráiler de 60 s para difusión." },
+  { n:96, es:"Beneficio", en:"Profit", cat:"Negocio",
+    desc:"<b>¿Cómo se gana dinero? Modelo de negocio claro.</b>",
+    game:"N/A: proyecto abierto, sin afán comercial.",
+    score:30,
+    improv:"Si se quisiera monetizar: edición DLC con cartas históricas de alta resolución." },
+
+  // ───── Cap 29-30: Transformación y Responsabilidad ─────
+  { n:97, es:"Transformación", en:"Transformation", cat:"Responsabilidad",
+    desc:"<b>¿Cómo transformará el juego al jugador?</b> Mejor / peor / qué.",
+    game:"Sale sabiendo más de 1492 que cuando entró. La <b>pantalla final de cada viaje</b> resume cuántos días llevó, qué hitos cumplió, qué decisiones tomó — invita a reflexionar sobre el contraste con lo histórico.",
+    score:90,
+    improv:"Compartir el balance final (export PNG o tweet) para socializar el aprendizaje." },
+  { n:98, es:"Responsabilidad", en:"Responsibility", cat:"Responsabilidad",
+    desc:"<b>¿Eres responsable de los efectos de tu juego? ¿Hay algo oculto que avergonzaría?</b>",
+    game:"Pestaña «La otra orilla» con descripción de taínos y caribes, biografías de Anacaona y Hatuey, cifras del colapso. <b>Nueva capa cartográfica «Cacicazgos taíno-caribes documentados»</b>: marcadores rojos en Jaragua (Anacaona), Maguana (Caonabo), Magua (Guarionex), Higüey (Cotubanamá), Marién (Guacanagarí), Guahaba (Hatuey), Boriquén (Agüeybaná II), Karibí (Dominica), Veragua (Quibián), Cueva (Comagre) — con popup ampliado, fuentes citadas (Las Casas, Pané, Rouse 1992).",
+    score:95,
+    improv:"Línea temporal de los hechos de cada cacicazgo (esclavitud, alzamiento, exterminio) sincronizada con la simulación." },
+  { n:99, es:"El Cuervo", en:"The Raven", cat:"Responsabilidad",
+    desc:"<b>¿Tu juego deja algún pensamiento o emoción rondando al jugador después de jugar?</b>",
+    game:"Sentido de cercanía con gente real de hace 534 años. <b>Cita variable de cierre del IV viaje</b>: el motor contabiliza la senda dominante (humanista por decisiones históricas, técnica por uso de astrolabio/sondaleza, contemplativa por modo Crónica y vistas cinemáticas) y elige una de tres citas finales distintas, etiquetando la senda al jugador. El cuervo deja una huella ajustada a su recorrido.",
+    score:92,
+    improv:"Ofrecer las tres citas como ramillete al final para que el jugador vea lo que pudo haber sido." },
+  { n:100, es:"Tu Propósito Secreto", en:"Your Secret Purpose", cat:"Responsabilidad",
+    desc:"<b>¿Cuál es tu propósito secreto al hacer este juego?</b> El motivo profundo.",
+    game:"<b>Propósito confesado en el Manifiesto del simulador</b> (modal Help): &laquo;que el jugador vea lo que Colón vio, sin sermón, con respeto al texto y a la mar, sin trivializar lo que vino después&raquo;.",
+    score:100,
+    improv:"Logrado en el simulador y documentado." }
+];
+
+/* ============================================================================
+   RENDER
+============================================================================ */
+function scoreColor(s){
+  if (s >= 80) return 'score-green';
+  if (s >= 60) return 'score-yellow';
+  if (s >= 40) return 'score-orange';
+  return 'score-red';
+}
+
+function renderLenses(list){
+  const grid = document.getElementById('lens-grid');
+  grid.innerHTML = list.map(l => `
+    <article class="lens" data-cat="${l.cat}" data-score="${l.score}">
+      <div class="head">
+        <div>
+          <div class="num">LENTE #${l.n}</div>
+          <h3>${l.es} <span class="en">— ${l.en}</span></h3>
+        </div>
+        <span class="badge-cat">${l.cat}</span>
+      </div>
+      <div class="score-bar">
+        <div class="score-fill" style="clip-path:inset(0 ${100-l.score}% 0 0);"></div>
+        <div class="score-text">${l.score} / 100</div>
+      </div>
+      <div class="desc">${l.desc}</div>
+      <div class="game">${l.game}</div>
+      <div class="improvements">${l.improv}</div>
+    </article>`).join('');
+}
+
+function applyFilters(){
+  const cat   = document.getElementById('filter-cat').value;
+  const sc    = document.getElementById('filter-score').value;
+  const q     = document.getElementById('filter-search').value.toLowerCase().trim();
+  const sort  = document.getElementById('filter-sort').value;
+  let list = LENSES.slice();
+  if (cat !== 'all') list = list.filter(l => l.cat === cat);
+  if (sc  === 'lo')  list = list.filter(l => l.score <= 40);
+  if (sc  === 'mid') list = list.filter(l => l.score > 40 && l.score < 80);
+  if (sc  === 'hi')  list = list.filter(l => l.score >= 80);
+  if (q){
+    list = list.filter(l =>
+      l.es.toLowerCase().includes(q) ||
+      l.en.toLowerCase().includes(q) ||
+      l.desc.toLowerCase().includes(q) ||
+      l.game.toLowerCase().includes(q));
+  }
+  if (sort === 'scoreDesc') list.sort((a,b)=>b.score-a.score);
+  else if (sort === 'scoreAsc') list.sort((a,b)=>a.score-b.score);
+  else list.sort((a,b)=>a.n-b.n);
+  renderLenses(list);
+}
+
+function populateCategories(){
+  const cats = [...new Set(LENSES.map(l => l.cat))];
+  const sel = document.getElementById('filter-cat');
+  cats.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+function computeSummary(){
+  const n = LENSES.length;
+  const avg = LENSES.reduce((s,l)=>s+l.score,0)/n;
+  const strong = LENSES.filter(l => l.score >= 80).length;
+  const weak   = LENSES.filter(l => l.score <= 40).length;
+  document.getElementById('sum-count').textContent = n;
+  document.getElementById('sum-avg').innerHTML = `<span class="${scoreColor(avg)}">${avg.toFixed(1)} %</span>`;
+  document.getElementById('sum-strong').innerHTML = `<span class="score-green">${strong}</span>`;
+  document.getElementById('sum-weak').innerHTML = `<span class="score-red">${weak}</span>`;
+  // Top 5 / Bottom 5
+  const sortedDesc = LENSES.slice().sort((a,b)=>b.score-a.score);
+  const sortedAsc  = LENSES.slice().sort((a,b)=>a.score-b.score);
+  document.getElementById('top-strengths').innerHTML = sortedDesc.slice(0,5)
+    .map(l=>`<li><b>${l.es}</b> (#${l.n}) — ${l.score}%. ${l.game.split('.')[0]}.</li>`).join('');
+  document.getElementById('top-weaknesses').innerHTML = sortedAsc.slice(0,5)
+    .map(l=>`<li><b>${l.es}</b> (#${l.n}) — ${l.score}%. ${l.improv}</li>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  populateCategories();
+  computeSummary();
+  applyFilters();
+  ['filter-cat','filter-score','filter-search','filter-sort'].forEach(id => {
+    document.getElementById(id).addEventListener('input', applyFilters);
+    document.getElementById(id).addEventListener('change', applyFilters);
+  });
+});
+</script>
+</body>
+</html>

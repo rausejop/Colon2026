@@ -1,0 +1,512 @@
+{
+  "when": "2026-05-17T17:03:14.821Z",
+  "source": "LensAudit.html",
+  "summary": {
+    "count": 100,
+    "average": 84.92,
+    "strong": 90,
+    "weak": 5
+  },
+  "lenses": [
+    {
+      "n": 1,
+      "es": "Experiencia Esencial",
+      "score": 90
+    },
+    {
+      "n": 2,
+      "es": "Sorpresa",
+      "score": 88
+    },
+    {
+      "n": 3,
+      "es": "Diversión",
+      "score": 88
+    },
+    {
+      "n": 4,
+      "es": "Curiosidad",
+      "score": 92
+    },
+    {
+      "n": 5,
+      "es": "Valor Endógeno",
+      "score": 85
+    },
+    {
+      "n": 6,
+      "es": "Resolución de Problemas",
+      "score": 90
+    },
+    {
+      "n": 7,
+      "es": "Tétrada Elemental",
+      "score": 92
+    },
+    {
+      "n": 8,
+      "es": "Diseño Holográfico",
+      "score": 80
+    },
+    {
+      "n": 9,
+      "es": "Unificación",
+      "score": 96
+    },
+    {
+      "n": 10,
+      "es": "Resonancia",
+      "score": 98
+    },
+    {
+      "n": 11,
+      "es": "Inspiración Infinita",
+      "score": 85
+    },
+    {
+      "n": 12,
+      "es": "Declaración del Problema",
+      "score": 95
+    },
+    {
+      "n": 13,
+      "es": "Los Ocho Filtros",
+      "score": 60
+    },
+    {
+      "n": 14,
+      "es": "Mitigación de Riesgos",
+      "score": 88
+    },
+    {
+      "n": 15,
+      "es": "El Juguete",
+      "score": 88
+    },
+    {
+      "n": 16,
+      "es": "El Jugador",
+      "score": 86
+    },
+    {
+      "n": 17,
+      "es": "Placer",
+      "score": 90
+    },
+    {
+      "n": 18,
+      "es": "Flujo",
+      "score": 88
+    },
+    {
+      "n": 19,
+      "es": "Necesidades",
+      "score": 88
+    },
+    {
+      "n": 20,
+      "es": "Juicio",
+      "score": 85
+    },
+    {
+      "n": 21,
+      "es": "Espacio Funcional",
+      "score": 90
+    },
+    {
+      "n": 22,
+      "es": "Estado Dinámico",
+      "score": 90
+    },
+    {
+      "n": 23,
+      "es": "Emergencia",
+      "score": 88
+    },
+    {
+      "n": 24,
+      "es": "Acción",
+      "score": 90
+    },
+    {
+      "n": 25,
+      "es": "Objetivos",
+      "score": 92
+    },
+    {
+      "n": 26,
+      "es": "Reglas",
+      "score": 85
+    },
+    {
+      "n": 27,
+      "es": "Habilidad",
+      "score": 86
+    },
+    {
+      "n": 28,
+      "es": "Valor Esperado",
+      "score": 80
+    },
+    {
+      "n": 29,
+      "es": "Azar",
+      "score": 88
+    },
+    {
+      "n": 30,
+      "es": "Equidad / Justicia",
+      "score": 85
+    },
+    {
+      "n": 31,
+      "es": "Desafío",
+      "score": 90
+    },
+    {
+      "n": 32,
+      "es": "Decisiones Significativas",
+      "score": 88
+    },
+    {
+      "n": 33,
+      "es": "Triangularidad",
+      "score": 86
+    },
+    {
+      "n": 34,
+      "es": "Habilidad vs Azar",
+      "score": 80
+    },
+    {
+      "n": 35,
+      "es": "Cabeza y Manos",
+      "score": 98
+    },
+    {
+      "n": 36,
+      "es": "Competición",
+      "score": 15
+    },
+    {
+      "n": 37,
+      "es": "Cooperación",
+      "score": 10
+    },
+    {
+      "n": 38,
+      "es": "Competición vs Cooperación",
+      "score": 50
+    },
+    {
+      "n": 39,
+      "es": "Tiempo",
+      "score": 95
+    },
+    {
+      "n": 40,
+      "es": "Recompensa",
+      "score": 92
+    },
+    {
+      "n": 41,
+      "es": "Castigo",
+      "score": 90
+    },
+    {
+      "n": 42,
+      "es": "Simplicidad / Complejidad",
+      "score": 92
+    },
+    {
+      "n": 43,
+      "es": "Elegancia",
+      "score": 95
+    },
+    {
+      "n": 44,
+      "es": "Carácter / Personalidad",
+      "score": 98
+    },
+    {
+      "n": 45,
+      "es": "Imaginación",
+      "score": 90
+    },
+    {
+      "n": 46,
+      "es": "Economía",
+      "score": 85
+    },
+    {
+      "n": 47,
+      "es": "Equilibrio / Balance",
+      "score": 86
+    },
+    {
+      "n": 48,
+      "es": "Accesibilidad",
+      "score": 92
+    },
+    {
+      "n": 49,
+      "es": "Progreso Visible",
+      "score": 92
+    },
+    {
+      "n": 50,
+      "es": "Paralelismo",
+      "score": 92
+    },
+    {
+      "n": 51,
+      "es": "La Pirámide",
+      "score": 90
+    },
+    {
+      "n": 52,
+      "es": "El Puzzle",
+      "score": 94
+    },
+    {
+      "n": 53,
+      "es": "Control",
+      "score": 88
+    },
+    {
+      "n": 54,
+      "es": "Interfaz Física",
+      "score": 88
+    },
+    {
+      "n": 55,
+      "es": "Interfaz Virtual",
+      "score": 92
+    },
+    {
+      "n": 56,
+      "es": "Transparencia",
+      "score": 94
+    },
+    {
+      "n": 57,
+      "es": "Retroalimentación",
+      "score": 92
+    },
+    {
+      "n": 58,
+      "es": "Jugosidad",
+      "score": 90
+    },
+    {
+      "n": 59,
+      "es": "Canales y Dimensiones",
+      "score": 88
+    },
+    {
+      "n": 60,
+      "es": "Modos",
+      "score": 80
+    },
+    {
+      "n": 61,
+      "es": "Curva de Interés",
+      "score": 92
+    },
+    {
+      "n": 62,
+      "es": "Interés Inherente",
+      "score": 90
+    },
+    {
+      "n": 63,
+      "es": "Belleza",
+      "score": 95
+    },
+    {
+      "n": 64,
+      "es": "Proyección",
+      "score": 88
+    },
+    {
+      "n": 65,
+      "es": "La Máquina de Historias",
+      "score": 88
+    },
+    {
+      "n": 66,
+      "es": "El Obstáculo",
+      "score": 90
+    },
+    {
+      "n": 67,
+      "es": "Simplicidad y Trascendencia",
+      "score": 80
+    },
+    {
+      "n": 68,
+      "es": "El Viaje del Héroe",
+      "score": 92
+    },
+    {
+      "n": 69,
+      "es": "La Cosa Más Extraña",
+      "score": 90
+    },
+    {
+      "n": 70,
+      "es": "Historia",
+      "score": 95
+    },
+    {
+      "n": 71,
+      "es": "Libertad",
+      "score": 92
+    },
+    {
+      "n": 72,
+      "es": "Control Indirecto",
+      "score": 88
+    },
+    {
+      "n": 73,
+      "es": "Colusión",
+      "score": 88
+    },
+    {
+      "n": 74,
+      "es": "El Mundo",
+      "score": 90
+    },
+    {
+      "n": 75,
+      "es": "El Avatar",
+      "score": 90
+    },
+    {
+      "n": 76,
+      "es": "Función del Personaje",
+      "score": 92
+    },
+    {
+      "n": 77,
+      "es": "Rasgos del Personaje",
+      "score": 95
+    },
+    {
+      "n": 78,
+      "es": "Circumplejo Interpersonal",
+      "score": 92
+    },
+    {
+      "n": 79,
+      "es": "La Red de Personajes",
+      "score": 90
+    },
+    {
+      "n": 80,
+      "es": "Estatus",
+      "score": 92
+    },
+    {
+      "n": 81,
+      "es": "Transformación del Personaje",
+      "score": 90
+    },
+    {
+      "n": 82,
+      "es": "Contradicción Interna",
+      "score": 92
+    },
+    {
+      "n": 83,
+      "es": "La Cualidad Sin Nombre",
+      "score": 88
+    },
+    {
+      "n": 84,
+      "es": "Amistad",
+      "score": 10
+    },
+    {
+      "n": 85,
+      "es": "Expresión",
+      "score": 85
+    },
+    {
+      "n": 86,
+      "es": "Comunidad",
+      "score": 20
+    },
+    {
+      "n": 87,
+      "es": "Griefing",
+      "score": 100
+    },
+    {
+      "n": 88,
+      "es": "Amor",
+      "score": 88
+    },
+    {
+      "n": 89,
+      "es": "El Equipo",
+      "score": 90
+    },
+    {
+      "n": 90,
+      "es": "Documentación",
+      "score": 85
+    },
+    {
+      "n": 91,
+      "es": "Playtesting",
+      "score": 70
+    },
+    {
+      "n": 92,
+      "es": "Tecnología",
+      "score": 90
+    },
+    {
+      "n": 93,
+      "es": "La Bola de Cristal",
+      "score": 75
+    },
+    {
+      "n": 94,
+      "es": "El Cliente",
+      "score": 80
+    },
+    {
+      "n": 95,
+      "es": "La Presentación / Pitch",
+      "score": 75
+    },
+    {
+      "n": 96,
+      "es": "Beneficio",
+      "score": 30
+    },
+    {
+      "n": 97,
+      "es": "Transformación",
+      "score": 90
+    },
+    {
+      "n": 98,
+      "es": "Responsabilidad",
+      "score": 95
+    },
+    {
+      "n": 99,
+      "es": "El Cuervo",
+      "score": 92
+    },
+    {
+      "n": 100,
+      "es": "Tu Propósito Secreto",
+      "score": 100
+    }
+  ]
+}

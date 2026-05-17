@@ -1,239 +1,154 @@
-# ⚓ Colón 1492 — Manual del Piloto
+# Colón 1492 — Simulador histórico de los cuatro viajes
 
-> *Escrito de mi mano, Cristóbal Colón, Almirante de la Mar Océana, Visorrey y Gobernador de las Indias, para enseñanza del que tomare el gobernalle de esta nao de vidrio y luz que llaman ordenador.*
+> Reconstrucción rigurosa del descubrimiento del Atlántico occidental por Cristóbal Colón (3 de agosto de 1492 — 7 de noviembre de 1504), en un único fichero HTML5 sin instalación.
 
----
-
-## Prólogo a Vuestra Merced
-
-Plega a Nuestro Señor que halléis en este librillo lo que menester habéis para gobernar la flota como yo la goberné, desde el puerto de Palos en el año del Señor de mill y cuatrocientos y noventa y dos hasta las costas de Veragua. He aquí cuatro viajes míos en un solo cristal — el primero, el de la descubierta; el segundo, de la armada de diecisiete velas; el tercero, de la Tierra Firme y Paria; el cuarto, el alto viaje. Todos los días, todas las leguas, todas las almas que conmigo fueron, están allí escritos con su fuente, que no escribo cosa de la cual no haya razón en libro abierto.
-
-Para entrar en el simulador no necesitáis más que abrir el fichero **`Colon2026.html`** en cualquier navegador moderno — Chrome, Edge, Firefox, todos sirven. No hay menester de instalar cosa ninguna; todo va dentro del mismo cristal.
+`Colon2026.html` es una *single-page application* autocontenida: Three.js, Leaflet, Tailwind, shaders Gerstner, Web Audio, Web Speech, todo cargado por CDN. Doce años de navegación, cuatro naves, ochenta tripulantes documentados, trece decisiones del Almirante, seis tormentas climatológicas reales, ocho encuentros con poblaciones nativas — cada dato con su fuente abierta.
 
 ---
 
-## 1. División de la pantalla
+## Instalación y ejecución
 
-El simulador se parte en dos mitades, como la carta y el mar:
+### Requisitos
+- **Navegador moderno** con soporte WebGL 2 (Chrome 90+, Edge 90+, Firefox 90+, Safari 15+).
+- **Conexión á Internet** para la primera carga (los CDN de Three.js, Leaflet y las tipografías). Tras la carga inicial los assets quedan cacheados.
+- **Resolución recomendada** ≥ 1280 × 800. El layout asume escritorio.
+- **Audio activable** tras el primer gesto del usuario (requerimiento del navegador para `AudioContext`).
 
-- **A mano siniestra (izquierda)** — la **carta de marear**. Mapa doble: una capa moderna por debajo, y por encima la carta del XV o XVI según vuestro gusto (Portulano, Cosa 1500, Cantino 1502, Caverio 1505) o la moderna sin pergamino.
-- **A mano diestra (derecha)** — la **mar y las tres naves**: la nao Santa María, la carabela Pinta y la Niña, en su formación verdadera, sobre olas que se mueven por shaders Gerstner (que así llaman los modernos a las ondas trocoidales).
-- **Por encima de todo** — la **cabecera** con la fecha juliana simulada, la hora a bordo, los controles del tiempo y los botones de ayuda, configuración y salvado de partida.
-- **Sobre la escena 3D**, transparente como vidriera, va el **HUD** (telemetría, vida a bordo, puesto, anotación del día) y los instrumentos del Piloto (compás, astrolabio, cuadrante, ampolleta).
+### Instalación
+No la hay. El proyecto es deliberadamente un único fichero HTML.
 
----
+```sh
+git clone https://github.com/<tu-usuario>/colon-1492.git
+cd colon-1492
+```
 
-## 2. El gobierno del Tiempo
+### Ejecución
+Abrir `Colon2026.html` con cualquier navegador moderno. Tres opciones:
 
-En la barra superior tenéis siete velocidades de simulación. Pulsadlas con el ratón o con las teclas **1** a **7**:
+```sh
+# 1. Doble clic
+# (basta con abrir el fichero desde el explorador)
 
-| Tecla | Velocidad | Para qué sirve |
-|------:|----------:|----------------|
-| `1` | **1 : 1** | Tiempo real — un segundo de mar por cada segundo de cristal. Para sentir la maniobra. |
-| `2` | **1 min/s** | Para una guardia entera en pocos minutos. |
-| `3` | **1 h/s** | Para una jornada de mar. |
-| `4` | **1 día/s** | Para cruzar el Océano en una mañana. |
-| `5` | **1 semana/s** | Para abarcar el viaje primero (33 días) en medio minuto. |
-| `6` | **2 meses/s** | Para los cuatro viajes en una sentada. |
-| `7` | **1 año/s** | Para asomarse al conjunto. |
+# 2. Servir localmente para evitar restricciones de origen
+python -m http.server 8080
+# luego http://localhost:8080/Colon2026.html
 
-- **Espacio** — pausa y reanuda. Recordad: en pausa, el mar sigue ondulando, pero la fecha no avanza.
-- **+ / −** o **⏪ ⏩** — paso adelante o atrás en la tabla de velocidades.
-- **⚓ Sync histórico** (botón verde de la cabecera, o tecla **H**) — recoge la flota y la pone donde el Diario dice que estaba en la fecha simulada. Resetea las velas y cancela el modo manual. Es vuestro botón de penitencia para cuando os habéis perdido.
+# 3. Con Node
+npx http-server -p 8080
+```
 
----
-
-## 3. La carta de marear (mitad izquierda)
-
-### 3.1 Eras cartográficas
-Cinco botones en la esquina superior izquierda del mapa. Cada uno carga una carta verdadera de su tiempo, con su licencia abierta:
-
-- **1492 · Portulano** — estilo del XV con filtro de pergamino y rosa de vientos.
-- **1500 · Cosa** — *Mapamundi de Juan de la Cosa*, mi maestre y dueño de la Santa María; primer mapa conocido con la tierra del Nuevo Mundo.
-- **1502 · Cantino** — *Planisferio de Cantino*, copia portuguesa que vino a manos del duque de Ferrara.
-- **1505 · Caverio** — carta de Nicolò Caverio.
-- **Moderno** — cartografía actual, por si os perdéis.
-
-### 3.2 Capas (esquina superior derecha)
-- **Ruta histórica** — la línea de mis cuatro viajes.
-- **Hitos del Diario** — alfileres en los días señalados (avistamiento del 12 de octubre, naufragio de Nochebuena, Paria, Belén...).
-- **Vientos alisios** — bandas de los alisios del NE (de ida) y los del oeste (de vuelta, por las Azores).
-- **Isógonas 1492** — líneas de igual declinación magnética para el año de la descubierta.
-- **Sólo topónimos del XV/XVI** — para no ver «Cuba» sino *Juana*, ni «Haití» sino *La Española*, ni «Puerto Rico» sino *Borinquen*, ni «San Salvador» sino *Guanahaní*, como los puse yo.
-
-### 3.3 Matriz de coordenadas (al pie del mapa)
-Cuatro lecturas a la vez, que son la sustancia del oficio:
-
-1. **Estima** — el *dead reckoning* mío, con la merma del 15% que yo decía públicamente a la marinería para no espantarla.
-2. **Magnética 1492** — coordenadas en aguja, con la declinación de aquel año (modelo *gufm1* reducido).
-3. **Magnética 1504** — declinación al fin del cuarto viaje (la aguja noruesteaba ya bastante).
-4. **GPS / WGS-84** — la verdad de hoy, que no teníamos.
+> El servidor local sólo es estrictamente necesario si tu navegador bloquea la API de `open-elevation` por CORS al abrir desde `file://`. La sondaleza usa esa API pública; sin ella, el resto del simulador funciona.
 
 ---
 
-## 4. La mar y las naves (mitad derecha)
+## Manuales
 
-### 4.1 Las tres naves
-Las tres naves del primer viaje navegan juntas en formación. La que tenéis seleccionada en el panel **PUESTO A BORDO** es la activa; las otras dos van por autopilot histórico salvo que vos las hagáis manuales. Las velas se modelan una a una:
-
-- **Trinquete** (foque cuadrado a proa)
-- **Mayor** (la grande)
-- **Gavia** (sobre la mayor)
-- **Mezana** (latina, a popa)
-- **Cebadera** (bajo el bauprés)
-
-Cada una se ajusta de 0 a 100% con su deslizador. El motor calcula la propulsión por el ángulo aparente del viento: **bajo 67° de ceñida no hay propulsión ninguna** — el aparejo redondo del XV no sabe ceñir como las latinas; el rendimiento máximo está entre 110° y 150° (largo y popa).
-
-> **Aviso del Almirante:** si tocáis las velas o el timón de la nave activa, ésta se separa de la formación y queda en modo *manual*. Para volver a juntarlas, pulsad ⚓ Sync histórico (tecla **H**).
-
-### 4.2 Maniobra con el timón (teclado)
-| Tecla | Efecto |
-|------:|--------|
-| `←` / `→` | Caña a babor / estribor |
-| `↑` / `↓` | Acortar / largar trapo (todas las velas a una) |
-| `H` | Volver al rumbo histórico y devolver el control al autopilot |
-
-### 4.3 Vista 3D y pantalla completa
-- **⛶ Mapa a pantalla completa** o **⛶ Naves a pantalla completa** — cada panel puede ocupar todo el viewport. **ESC** restaura la vista partida.
-- Teclas **M** (Mapa) y **N** (Naves) — atajos para los mismos botones.
-- El ratón sobre la escena 3D rota la cámara (orbit controls); la rueda hace zoom.
+| Manual | Para quién | Contenido |
+|--------|------------|-----------|
+| **[USER_MANUAL.md](USER_MANUAL.md)** | Jugador | Manual del Piloto escrito por el Almirante Colón en primera persona: cómo gobernar las naves, leer la carta, tomar la altura, sortear el motín, vivir los cuatro viajes. |
+| **[TECHNICAL_MANUAL.md](TECHNICAL_MANUAL.md)** | Jugador avanzado | Todos los elementos técnicos: atajos de teclado, modos de dificultad, telemetría exportable, save/load, configuración detallada, APIs externas, rendimiento. |
+| **[DEVELOPMENT_MANUAL.md](DEVELOPMENT_MANUAL.md)** | Desarrollador | Arquitectura, metodología (auditoría de las 100 lentes de Schell), subsistemas (Three.js, shaders, audio, mapas, geomagnetismo, efemérides), pipeline de calidad y cómo contribuir. |
+| [CLAUDE.md](CLAUDE.md) | Guía para asistentes IA | Convenciones y restricciones del repositorio. |
+| [CHANGELOG.md](CHANGELOG.md) | Histórico | Iteraciones del audit (generado por `tools/release-notes.mjs`). |
 
 ---
 
-## 5. El Puesto a bordo
+## Características principales
 
-Panel arriba a la derecha. Elegid:
-
-- **Nave** — Santa María, Pinta o Niña (la activa).
-- **Tripulante** — el rol cambia el HUD según el oficio del hombre. Pongamos por caso:
-  - **Almirante (yo)** — cartas y estima.
-  - **Piloto** (Pedro Alonso Niño, Cristóbal García Sarmiento, Sancho Ruiz) — astrolabio, cuadrante, ampolleta.
-  - **Maestre** (Juan de la Cosa, Juan Niño) — bodega, carga.
-  - **Contramaestre** (Chachu) — jarcia, velas.
-  - **Carpintero** (Maestre Juan) — integridad del casco.
-  - **Tonelero** (Lope) — pipas de agua y vino.
-  - **Cirujano** (Maestre Alonso) — salud de la marinería.
-  - **Vigía** (Rodrigo de Triana) — el grito de tierra.
-  - **Despensero** (García Hernández) — ración del día.
-
-Cada nombre lleva su biografía y su fuente — Gould (1984) para los del 1492, Pleitos Colombinos del Archivo General de Indias para los del segundo, tercero y cuarto viaje.
+- **Cuatro viajes históricos** (1492-1504) con fechas julianas, ruta documentada y trece puntos de decisión contrafactual.
+- **Cartografía dual**: cinco eras (portulano XV, Mapamundi de Juan de la Cosa 1500, Cantino 1502, Caverio 1505, moderna) con topónimos del XV/XVI.
+- **Tres naves modeladas en 3D** con shader Gerstner (olas trocoidales), velas configurables, jarcia, cofas, ancla.
+- **Matriz de coordenadas** simultánea: estima de Colón (con subestimación del 15 %), magnética 1492, magnética 1504, WGS-84.
+- **Cuatro mini-juegos navales reales**: astrolabio, cuadrante, sondaleza (con API SRTM), corredera de 28 segundos.
+- **Sistema climatológico**: seis temporales reales (chubasco, tormenta del Atlántico, huracán antillano, calma chicha, galerna, borrasca tropical, niebla espesa) con probabilidad por mes y latitud.
+- **Voces de la tripulación**: 80 personajes documentados con voz sintetizada adaptada á edad y oficio (Web Speech API).
+- **Drone armónico reactivo al Beaufort**: pad sintetizado que cambia con la fuerza del viento.
+- **Telemetría exportable**: panel «Trayectoria del Almirante» con seguimiento de habilidad, fidelidad histórica, metas personales.
+- **Pantalla emotiva de cierre por viaje** con cita literal del Almirante.
+- **18 sellos del Diario** desbloqueables con cita histórica.
+- **Auditoría completa**: `LensAudit.html` evalúa el simulador con las 100 lentes de Jesse Schell (*The Art of Game Design*).
 
 ---
 
-## 6. Telemetría y vida a bordo
+## Estructura del repositorio
 
-A la izquierda del HUD veis dos paneles:
-
-### 6.1 Telemetría
-- **Viento** — velocidad en nudos y rumbo cardinal (de dónde sopla).
-- **Beaufort** — fuerza F0 a F12.
-- **Velocidad en agua / sobre tierra (STW / SOG)** — la primera por la corredera, la segunda corregida por corriente.
-- **Rumbo** — verdadero, en grados y rumbo cardinal.
-- **Timón** — grados a babor o estribor.
-- **Abatimiento (leeway)** — grados a sotavento.
-- **Deriva (drift)** — corriente oceánica climatológica.
-- **Tensión de la jarcia / Integridad del casco / Moral de la marinería** — barritas en color. Cuando el casco baja de 40%, la nao hace agua; cuando la moral baja de 30%, hay riesgo de motín.
-
-### 6.2 Vida a bordo
-- **Hora canónica** — Maitines, Laudes, Prima, Tercia, Sexta, Nona, Vísperas, Completas. Cada una traerá su rezo.
-- **Guardia y ampolleta** — guardia 1 a 6 (cada una de cuatro horas), ampolleta 1 a 8 dentro de cada guardia. La campana suena tantas veces como ampolletas van.
-- **Salve Regina** — cantada al ocaso por los grumetes, según costumbre.
-- **Menú del día** — carne salada los días de carne; pescado, queso o garbanzos los viernes y vigilias.
-- **Ración** — **libra y media de bizcocho, medio azumbre de vino, seis onzas de carne salada, dos cuartillos de agua**. Provisiones embarcadas para unos 90 días.
-
----
-
-## 7. Las decisiones del Almirante
-
-En las fechas señaladas del Diario, la simulación se detiene y os presenta **tres opciones**:
-
-- La marcada con **⚓** es la **histórica** — lo que yo hice.
-- Las otras dos son **contrafactuales razonados**, con consecuencias documentadas que afectan a moral, casco y trayectoria, pero no rompen la línea principal del relato.
-
-Días de decisión que encontraréis:
-
-- **6 de agosto de 1492** — Avería del timón de la Pinta. ¿Sospecháis de Quintero, calláis, o dejáis a la Pinta a su suerte?
-- **25 de septiembre de 1492** — Pinzón grita «¡albricias, tierra!» — pero al día siguiente es nube. ¿Bajáis a explorar al sudoeste o seguís al oeste?
-- **10 de octubre de 1492** — Motín de la marinería. Tres días les pedí. ¿Tres, uno, o regresar?
-- **24-25 de diciembre de 1492** — El mozo al timón, la nao en banco. ¿Encalláis (Fuerte de la Navidad), salváis, o seguís?
-- **Febrero 1493** — Tormenta camino de Lisboa. ¿Echáis al mar la barrica con copia del Diario o probáis la carabela?
-- **Julio 1502** — Huracán en Santo Domingo. Bobadilla no escucha — y los suyos perecen.
-
-> Antes de cerrar el modal de decisión, podéis ajustar la velocidad de simulación para lo que venga después.
+```
+.
+├── Colon2026.html       # El simulador (~600 KB, SPA completo)
+├── LensAudit.html       # Auditoría de las 100 lentes de Schell
+├── USER_MANUAL.md       # Manual del Piloto (voz del Almirante)
+├── TECHNICAL_MANUAL.md  # Manual técnico para jugadores
+├── DEVELOPMENT_MANUAL.md# Manual de desarrollo
+├── README.md            # Este fichero
+├── CHANGELOG.md         # Iteraciones del audit
+├── CLAUDE.md            # Instrucciones para asistentes IA
+├── reference/           # Fuentes históricas (Navarrete PDF, etc.)
+├── specs/               # Spec original del producto
+└── tools/               # Scripts de calidad (Node, sin npm)
+    ├── preflight.mjs    # Verificación previa al commit
+    ├── check.mjs        # Validación de sprite, JS, sin emojis
+    ├── lens-diff.mjs    # Snapshot/diff del audit
+    ├── audit-export.mjs # Exporta el audit á CSV/JSON
+    ├── wordcount.mjs    # Composición del fichero
+    ├── release-notes.mjs# CHANGELOG automático
+    └── clean-sprite.mjs # Limpia iconos huérfanos
+```
 
 ---
 
-## 8. Instrumentos del Piloto
+## Calidad y verificación
 
-Al pie de la escena 3D (visibles según el rol):
+```sh
+# Verificación completa (emojis, parseo JS, sprite SVG, audit, tamaño)
+node tools/preflight.mjs
 
-- **Compás** — rosa de los vientos con la **declinación de 1492 ya aplicada** sobre el rumbo verdadero. Lo que veis es lo que veía yo en mi bitácora.
-- **Astrolabio náutico** — altura del Sol a mediodía (de día) o de la **estrella Polar** (de noche), con la **corrección de las Guardas** según la regla de la Polar (a la cabeza, brazo izquierdo, hombro siniestro...) que se usaba en el XV antes de la regla del Norte de Faleiro.
-- **Cuadrante** — la otra vía de medir altura, con la plomada.
-- **Ampolleta** — la media hora se vuelca con su campana, como en cubierta. Si bajáis la velocidad a 1:1, la oís sonar.
-- **Flecha de viento** en la escena 3D — sobre la nave activa, apuntando hacia donde sopla.
+# Snapshot del estado actual del audit
+node tools/lens-diff.mjs snapshot
 
----
+# Diferencia con el snapshot anterior
+node tools/lens-diff.mjs diff
 
-## 9. Salvar y cargar partida
+# Composición del fichero por sección
+node tools/wordcount.mjs
+```
 
-- **💾 Guardar** — guarda la fecha simulada, posición, rumbo, velas, moral, casco, y qué decisiones habéis tomado.
-- **📂 Cargar** — restaura el estado.
-- El navegador lo guarda en su `localStorage`; cada cristal (cada equipo, cada navegador) tiene su propio salvado.
-
----
-
-## 10. Configuración (⚙)
-
-- **Calidad del océano** — `low`, `medium`, `high`, `ultra`. En `ultra` el mar son 256×256 vértices con shader Gerstner de cuatro armónicos; en `low` baja a 64×64.
-- **Calidad de las naves** — afecta a número de polígonos del casco, segmentos del mástil, jarcia, texturas procedurales y normal maps. En `low` no hay jarcia ni anclas; en `ultra` hay obenques, flechastes, cofas y ventanas en los castillos.
-- **Toggles** — formación de flota visible, flecha de viento, niebla, isógonas, vientos alisios, topónimos sólo XV/XVI, modo de diario (original, modernizado o ambos), avisos toast, sonido, velocidad por defecto.
+Todos los scripts son Node 18+ puros sin dependencias (no hay `package.json`, no hay `npm install`).
 
 ---
 
-## 11. Atajos de teclado — resumen
+## Restricciones de diseño
 
-| Tecla | Efecto |
-|------:|--------|
-| `Espacio` | Pausa / reanuda |
-| `+` / `−` | Acelerar / decelerar |
-| `1`–`7` | Velocidad directa |
-| `←` / `→` | Timón a babor / estribor (modo manual) |
-| `↑` / `↓` | Acortar / largar trapo (modo manual) |
-| `H` | Sync histórico — vuelve la flota a la posición real, resetea velas, cancela manual |
-| `S` | Sonido on / off |
-| `M` / `N` | Pantalla completa de Mapa / Naves |
-| `D` | Abre / cierra el Diario lateral |
-| `ESC` | Cierra modal o restaura la vista partida |
+Tres restricciones absolutas, no negociables:
+
+1. **Un único fichero HTML.** Sin bundlers, sin npm, sin ficheros locales aparte del HTML. Todo va por CDN.
+2. **Cero emojis** en el juego (`Colon2026.html`) y en la auditoría (`LensAudit.html`). Iconografía por sprites SVG y monogramas serif tipo cuño de lacre.
+3. **Rigor histórico máximo.** Cada nombre, fecha, coordenada, viento, cita lleva su fuente abierta. Los contrafactuales son razonados, no fantasía.
 
 ---
 
-## 12. Sobre las fuentes
+## Fuentes históricas principales
 
-No hay en este simulador nombre, fecha, coordenada ni viento que no lleve su fuente abierta. Las principales son:
-
-- **Diario de a bordo** — transcripción de Fray Bartolomé de las Casas (c. 1530), Biblioteca Nacional de España, Mss/Vitr/6/7. Edición de Manuel Alvar (Cabildo Insular de Gran Canaria, 1976) y versión de Ernesto Arias (Biblioteca Virtual Miguel de Cervantes).
-- **Historia de las Indias** — Las Casas.
-- **Vida del Almirante** — Hernando Colón, hijo mío, paje del cuarto viaje.
-- **Lettera Rarissima** — mi carta desde Jamaica de 7 de julio de 1503.
-- **Colección Navarrete** — Martín Fernández de Navarrete, *Colección de los viajes y descubrimientos*, Madrid 1825-1837 (en el fichero `reference/BRes140146.pdf`).
-- **Pleitos Colombinos** — Archivo General de Indias.
-- **Gould (1984)** — Alice Bache Gould, *Nueva lista documentada de los tripulantes de Colón en 1492*.
-- **Martínez-Hidalgo (1966)** — para las reconstrucciones modernas de las naves.
-- **gufm1 (Jackson et al. 2000)** — para el magnetismo terrestre histórico.
-- **Meeus** — para las efemérides astronómicas.
-
-Las fechas son del **calendario juliano** (estilo antiguo) hasta 1582, como aparecen en las fuentes — no del gregoriano, que aún no existía cuando partimos de Palos.
+| Fuente | Uso |
+|--------|-----|
+| *Diario de a bordo* (transcripción de Las Casas, BNE Mss/Vitr/6/7; ed. Manuel Alvar 1976; versión de Ernesto Arias) | Eje narrativo, decisiones, citas literales |
+| Las Casas, *Historia de las Indias* | II, III, IV viaje, encuentros con nativos |
+| Hernando Colón, *Vida del Almirante* | IV viaje, contexto familiar |
+| Lettera Rarissima (julio 1503) | Cierre del IV viaje |
+| Colección Navarrete (1825-1837) | Documentos diplomáticos |
+| Pleitos Colombinos (Archivo General de Indias) | Tripulación, biografías |
+| Gould 1984 — *Nueva lista documentada de los tripulantes de Colón en 1492* | Roster del I viaje |
+| Martínez-Hidalgo 1966 | Reconstrucciones de las naves |
+| Jackson et al. 2000 — modelo gufm1 | Geomagnetismo histórico |
+| Meeus, *Astronomical Algorithms* | Efemérides del Sol, Luna, Polar |
 
 ---
 
-## Despedida
+## Licencia
 
-Plega a Nuestro Señor que con este simulador veáis lo que yo vi: la mar pacífica, el viento alisio que no afloja, el bullicio de las aves a las setenta leguas, la luz que se asomó en la noche del 11 de octubre, el grito de Rodrigo de Triana al amanecer del 12, y la tierra de Guanahaní que llamé **San Salvador** por dar gracias a Nuestro Señor que tal merced nos había hecho.
+Software didáctico de código abierto. Las fuentes históricas citadas pertenecen al dominio público en sus ediciones originales; las transcripciones modernas tienen sus propias licencias detalladas en cada referencia.
 
-Y si en algo erraré, perdonadme, que yo no soy hombre de letras sino de la mar.
+## Créditos
 
-*Hecho en este cristal el año del Señor de 2026, día 16 de mayo, declinación magnética moderna ya muy distinta de la de mi tiempo.*
+Diseñado en 2026 sobre la metodología de Jesse Schell (*The Art of Game Design: A Book of Lenses*), auditado lente á lente en `LensAudit.html`. Iterado con asistencia de IA bajo las restricciones documentales descritas.
 
-**Christophorus Columbus**
-*El Almirante*
+Para reportar errores históricos, abrid una *issue* citando la fuente que refute lo expuesto. Toda corrección bienvenida.
